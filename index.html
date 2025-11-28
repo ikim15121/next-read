@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Read - Discover Your Next Adventure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div id="sidebar" class="sidebar hidden">
+            <button id="close-sidebar-btn" class="close-btn-small">&times;</button>
+            <nav class="sidebar-nav">
+                <button id="nav-recs" class="nav-item active">
+                    <span class="icon">✨</span> For You
+                </button>
+                <button id="nav-journal" class="nav-item">
+                    <span class="icon">📓</span> My Journal
+                </button>
+            </nav>
+        </div>
+        <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+        <!-- Questionnaire View (Hidden by default now) -->
+        <div id="questionnaire-view" class="questionnaire-view hidden">
+            <div class="questionnaire-content">
+                <!-- Step 0: Welcome -->
+                <div id="step-welcome" class="step active">
+                    <div class="step-header">
+                        <span class="icon-large">✨</span>
+                        <h1>Let's find your next favorite book.</h1>
+                        <p>Answer a few quick questions to get personalized recommendations.</p>
+                    </div>
+                    <div class="step-actions center">
+                        <button id="start-btn" class="primary-btn large-btn">Find My Next Book</button>
+                        <!-- Removed Skip button as search is gone -->
+                    </div>
+                </div>
+
+                <!-- Step 1: Reading Level -->
+                <div id="step-reading" class="step hidden">
+                    <div class="step-header">
+                        <h2>What is your reading level?</h2>
+                        <p>This helps us find books that are just right.</p>
+                    </div>
+                    <div class="option-grid" id="reading-options">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                    <div class="step-actions">
+                        <button id="reading-skip-btn" class="text-btn">Skip</button>
+                        <button id="reading-next-btn" class="primary-btn" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Authors -->
+                <div id="step-authors" class="step hidden">
+                    <div class="step-header">
+                        <h2>Who are your favorite authors?</h2>
+                        <p>We'll look for similar writers.</p>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="author-input" class="text-input"
+                            placeholder="e.g., Chris Colfer, J.K. Rowling...">
+                    </div>
+                    <div class="step-actions">
+                        <button id="author-back-btn" class="secondary-btn">Back</button>
+                        <button id="author-skip-btn" class="text-btn">Skip</button>
+                        <button id="author-next-btn" class="primary-btn">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Genres -->
+                <div id="step-genres" class="step hidden">
+                    <div class="step-header">
+                        <h2>What kind of stories do you like?</h2>
+                        <p>Pick as many as you want.</p>
+                    </div>
+                    <div class="option-grid" id="genre-options">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                    <div class="step-actions">
+                        <button id="genre-back-btn" class="secondary-btn">Back</button>
+                        <button id="genre-skip-btn" class="text-btn">Skip</button>
+                        <button id="genre-next-btn" class="primary-btn" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Mood -->
+                <div id="step-mood" class="step hidden">
+                    <div class="step-header">
+                        <h2>How do you want to feel?</h2>
+                        <p>Select a vibe.</p>
+                    </div>
+                    <div class="option-grid" id="mood-options">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                    <div class="step-actions">
+                        <button id="mood-back-btn" class="secondary-btn">Back</button>
+                        <button id="mood-skip-btn" class="text-btn">Skip</button>
+                        <button id="mood-next-btn" class="primary-btn" disabled>Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Journal Setup -->
+                <div id="step-journal" class="step hidden">
+                    <div class="step-header">
+                        <h2>Would you like the Journal Setup?</h2>
+                        <p>Track your reading journey.</p>
+                    </div>
+                    <div class="option-grid" id="journal-options">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                    <div class="step-actions">
+                        <button id="journal-back-btn" class="secondary-btn">Back</button>
+                        <button id="finish-btn" class="primary-btn" onclick="window.finishQuestionnaire()">Show Me
+                            Books</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button id="menu-btn" class="icon-btn">
+                    <span class="icon">☰</span>
+                </button>
+                <div class="logo">
+                    <img src="logo.png" alt="Logo" class="logo-img">
+                    <h1>Next Read</h1>
+                </div>
+            </div>
+            <p class="tagline">Discover stories that speak to you.</p>
+        </header>
+
+        <main>
+            <!-- Recommendations View (Default) -->
+            <div id="recommendations-view" class="recommendations-view">
+                <div class="results-header">
+                    <h2>Picked Just For You ✨</h2>
+                    <button id="retake-quiz-btn" class="secondary-btn small-btn">Update Preferences</button>
+                </div>
+                <div id="recs-grid" class="book-grid">
+                    <!-- Recommendations injected here -->
+                </div>
+                <div id="recs-loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Curating your personal library...</p>
+                </div>
+                <div id="recs-empty" class="empty-state hidden">
+                    <p>We don't know what you like yet!</p>
+                    <button id="take-quiz-btn" class="primary-btn">Take the Quiz</button>
+                </div>
+            </div>
+
+            <!-- Journal View -->
+            <div id="journal-view" class="journal-view hidden">
+                <div class="journal-header">
+                    <h2>My Reading Journal 📓</h2>
+                    <p>Track your wishlist and write your thoughts.</p>
+                </div>
+
+                <div class="journal-grid">
+                    <!-- Wishlist Panel -->
+                    <div class="journal-panel wishlist-panel">
+                        <div class="panel-header">
+                            <h3>Wishlist ✨</h3>
+                            <span class="count-badge" id="wishlist-count">0</span>
+                        </div>
+                        <div class="add-item-form">
+                            <input type="text" id="wishlist-input" placeholder="Add a book title...">
+                            <button id="add-wishlist-btn" class="icon-btn-small">+</button>
+                        </div>
+                        <ul id="wishlist-list" class="wishlist-list">
+                            <!-- Items injected via JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Summaries Panel -->
+                    <div class="journal-panel summaries-panel">
+                        <div class="panel-header">
+                            <h3>My Notes 📝</h3>
+                            <button id="add-section-btn" class="secondary-btn small-btn">+ New Section</button>
+                        </div>
+                        <div id="journal-sections" class="journal-sections">
+                            <!-- Sections injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Book Details Modal -->
+        <div id="book-modal" class="modal hidden">
+            <div class="modal-content">
+                <button id="close-modal" class="close-btn">&times;</button>
+                <div id="modal-body" class="modal-body">
+                    <!-- Book details injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onerror = function (msg, url, line, col, error) {
+            alert("Global Error: " + msg + "\nLine: " + line);
+            return false;
+        };
+    </script>
+    <script src="bundle_v2.js"></script>
+
+    <!-- Fallback Script: Safety net for the menu! -->
+    <script>
+        (function () {
+            // Wait a bit to let bundle load if it's going to
+            window.addEventListener('load', function () {
+                const menuBtn = document.getElementById('menu-btn');
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                const closeBtn = document.getElementById('close-sidebar-btn');
+
+                function toggle(e) {
+                    // If bundle.js has already handled this button, do nothing!
+                    if (menuBtn && menuBtn.dataset.handled === 'true') {
+                        console.log('Fallback: Bundle already handling menu. Stepping back. 🛡️');
+                        return;
+                    }
+
+                    console.log('Fallback: Toggling menu (Safety Net Active) 🛟');
+                    if (sidebar && overlay) {
+                        sidebar.classList.toggle('hidden');
+                        overlay.classList.toggle('hidden');
+                    }
+                }
+
+                // Attach listeners if elements exist
+                if (menuBtn) menuBtn.addEventListener('click', toggle);
+                if (closeBtn) closeBtn.addEventListener('click', toggle);
+                if (overlay) overlay.addEventListener('click', toggle);
+            });
+        })();
+    </script>
+</body>
+
+</html>
