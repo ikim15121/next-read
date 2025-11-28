@@ -1169,14 +1169,14 @@ function updateChallengeProgress() {
 
     const read = parseInt(localStorage.getItem('bookFinderBooksRead')) || 0;
 
-    booksReadCount.textContent = read;
-    booksGoalCount.textContent = goal;
+    if (booksReadCount) booksReadCount.textContent = read;
+    if (booksGoalCount) booksGoalCount.textContent = goal;
 
     let percentage = Math.round((read / goal) * 100);
     if (percentage > 100) percentage = 100;
 
-    progressText.textContent = `${percentage}%`;
-    progressBarFill.style.width = `${percentage}%`;
+    if (progressText) progressText.textContent = `${percentage}%`;
+    if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
 
     // Encouragement
     if (percentage === 0) {
