@@ -1179,14 +1179,16 @@ function updateChallengeProgress() {
     if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
 
     // Encouragement
-    if (percentage === 0) {
-        encouragementMsg.textContent = "Let's get started! 🚀";
-    } else if (percentage < 50) {
-        encouragementMsg.textContent = "Great start! Keep going! 📖";
-    } else if (percentage < 100) {
-        encouragementMsg.textContent = "Almost there! You got this! 🔥";
-    } else {
-        encouragementMsg.textContent = "You did it! Amazing! 🏆✨";
+    if (encouragementMsg) {
+        if (percentage === 0) {
+            encouragementMsg.textContent = "Let's get started! 🚀";
+        } else if (percentage < 50) {
+            encouragementMsg.textContent = "Great start! Keep going! 📖";
+        } else if (percentage < 100) {
+            encouragementMsg.textContent = "Almost there! You got this! 🔥";
+        } else {
+            encouragementMsg.textContent = "You did it! Amazing! 🏆✨";
+        }
     }
 }
 
