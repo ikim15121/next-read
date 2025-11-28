@@ -1120,7 +1120,7 @@ function logBook(emoji) {
     localStorage.setItem('bookFinderBooksRead', currentRead);
 
     // Animation effect could go here
-    alert(`Added a book! ${emoji}`);
+    // alert(`Added a book! ${emoji}`);
     updateChallengeProgress();
 }
 
