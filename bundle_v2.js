@@ -200,10 +200,10 @@ const closeModalBtn = document.getElementById('close-modal');
 
 // Sidebar Elements
 let menuBtn, sidebar, sidebarOverlay, closeSidebarBtn;
-let navSearch, navRecs, navJournal;
+let navSearch, navRecs, navJournal, navChallenge, navSurprise;
 
 // Views
-let searchView, recsView, journalView;
+let searchView, recsView, journalView, challengeView;
 
 // Recs Elements
 // Recs Elements
@@ -211,6 +211,7 @@ let recsGrid, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
 
 // Journal Elements
 let wishlistInput, addWishlistBtn, wishlistList, wishlistCount, addSectionBtn, journalSectionsContainer;
+let challengeGoalInput, saveGoalBtn, progressPath, progressText, booksReadCount, booksGoalCount, encouragementMsg;
 
 // Questionnaire Elements
 let questionnaireView, startBtn, skipBtn;
@@ -284,9 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navSearch = document.getElementById('nav-search');
     navRecs = document.getElementById('nav-recs');
     navJournal = document.getElementById('nav-journal');
+    navChallenge = document.getElementById('nav-challenge');
+    navSurprise = document.getElementById('nav-surprise');
     searchView = document.getElementById('search-view');
     recsView = document.getElementById('recommendations-view');
     journalView = document.getElementById('journal-view');
+    challengeView = document.getElementById('challenge-view');
 
     recsGrid = document.getElementById('recs-grid');
     recsLoading = document.getElementById('recs-loading');
@@ -300,6 +304,14 @@ document.addEventListener('DOMContentLoaded', () => {
     wishlistCount = document.getElementById('wishlist-count');
     addSectionBtn = document.getElementById('add-section-btn');
     journalSectionsContainer = document.getElementById('journal-sections');
+
+    challengeGoalInput = document.getElementById('challenge-goal');
+    saveGoalBtn = document.getElementById('save-goal-btn');
+    progressPath = document.getElementById('progress-path');
+    progressText = document.getElementById('progress-text');
+    booksReadCount = document.getElementById('books-read-count');
+    booksGoalCount = document.getElementById('books-goal-count');
+    encouragementMsg = document.getElementById('encouragement-msg');
 
     questionnaireView = document.getElementById('questionnaire-view');
     startBtn = document.getElementById('start-btn');
@@ -331,6 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadJournal();
     setupJournalListeners();
+    setupChallengeListeners();
+    setupSurpriseListeners();
+    loadChallengeGoal();
     loadPreferences();
 });
 
@@ -685,19 +700,25 @@ function switchView(viewName) {
     // searchView removed
     recsView.classList.add('hidden');
     journalView.classList.add('hidden');
+    challengeView.classList.add('hidden');
 
     // Deactivate navs
     // navSearch removed
     navRecs.classList.remove('active');
     navJournal.classList.remove('active');
+    navChallenge.classList.remove('active');
 
     if (viewName === 'recs') {
         recsView.classList.remove('hidden');
         navRecs.classList.add('active');
         loadRecommendations();
-    } else {
+    } else if (viewName === 'journal') {
         journalView.classList.remove('hidden');
         navJournal.classList.add('active');
+    } else if (viewName === 'challenge') {
+        challengeView.classList.remove('hidden');
+        navChallenge.classList.add('active');
+        updateChallengeProgress();
     }
 }
 
@@ -1096,3 +1117,104 @@ function closeModal() {
     modalBody.innerHTML = '';
 }
 
+
+// --- Reading Challenge Logic ---
+function setupChallengeListeners() {
+    if (navChallenge) {
+        navChallenge.addEventListener('click', () => switchView('challenge'));
+    }
+    if (saveGoalBtn) {
+        saveGoalBtn.addEventListener('click', saveChallengeGoal);
+    }
+}
+
+function loadChallengeGoal() {
+    const savedGoal = localStorage.getItem('bookFinderChallengeGoal');
+    if (savedGoal) {
+        challengeGoalInput.value = savedGoal;
+    }
+    updateChallengeProgress();
+}
+
+function saveChallengeGoal() {
+    const goal = parseInt(challengeGoalInput.value) || 10;
+    localStorage.setItem('bookFinderChallengeGoal', goal);
+    updateChallengeProgress();
+    alert('Goal updated! 🎯');
+}
+
+function updateChallengeProgress() {
+    const goal = parseInt(challengeGoalInput.value) || 10;
+    // Count sections as books read
+    const read = journalData.sections.length;
+
+    booksReadCount.textContent = read;
+    booksGoalCount.textContent = goal;
+
+    let percentage = Math.round((read / goal) * 100);
+    if (percentage > 100) percentage = 100;
+
+    progressText.textContent = `${percentage}%`;
+    progressPath.setAttribute('stroke-dasharray', `${percentage}, 100`);
+
+    // Encouragement
+    if (percentage === 0) {
+        encouragementMsg.textContent = "Let's get started! 🚀";
+    } else if (percentage < 50) {
+        encouragementMsg.textContent = "Great start! Keep going! 📖";
+    } else if (percentage < 100) {
+        encouragementMsg.textContent = "Almost there! You got this! 🔥";
+    } else {
+        encouragementMsg.textContent = "You did it! Amazing! 🏆✨";
+    }
+}
+
+// --- Surprise Me Logic ---
+function setupSurpriseListeners() {
+    if (navSurprise) {
+        navSurprise.addEventListener('click', handleSurpriseMe);
+    }
+}
+
+async function handleSurpriseMe() {
+    // 1. Pick a random genre
+    const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+
+    // 2. Show loading (re-use recs loading for now or just a toast)
+    const originalText = navSurprise.innerHTML;
+    navSurprise.innerHTML = '<span class="icon">🎲</span> Picking...';
+    navSurprise.disabled = true;
+
+    try {
+        // 3. Fetch random books from that genre
+        // Use a random startIndex to get different books
+        const randomStartIndex = Math.floor(Math.random() * 20);
+        const query = `subject:"${randomGenre.label}"`;
+
+        const response = await fetch(
+            `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=${randomStartIndex}&maxResults=10&langRestrict=en&key=${API_KEY}`
+        );
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+            // 4. Pick one random book from results
+            const randomBook = data.items[Math.floor(Math.random() * data.items.length)];
+
+            // 5. Open details
+            openBookDetails(randomBook);
+
+            // Close sidebar if mobile
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        } else {
+            alert('Oops! The magic dice rolled off the table. Try again!');
+        }
+    } catch (err) {
+        console.error('Surprise Me Error:', err);
+        alert('Magic failed! 🪄 Please try again.');
+    } finally {
+        navSurprise.innerHTML = originalText;
+        navSurprise.disabled = false;
+    }
+}

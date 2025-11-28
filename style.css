@@ -1048,3 +1048,114 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Challenge View */
+.challenge-view {
+    padding: 2rem 0;
+    animation: fadeIn 0.5s ease;
+}
+
+.challenge-view.hidden {
+    display: none;
+}
+
+.challenge-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    background: #FFF;
+    padding: 3rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+}
+
+.challenge-container h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.challenge-container p {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.goal-setting {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.goal-setting input {
+    width: 80px;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.progress-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.progress-circle {
+    width: 250px;
+    height: 250px;
+}
+
+.circular-chart {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 250px;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 2.5;
+}
+
+.circle {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke: var(--primary-color);
+    transition: stroke-dasharray 1s ease;
+}
+
+.percentage {
+    fill: var(--text-main);
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 0.5em;
+    text-anchor: middle;
+}
+
+.progress-stats {
+    font-size: 1.2rem;
+}
+
+.progress-stats span {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.encouragement {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
