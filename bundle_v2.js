@@ -1149,19 +1149,28 @@ function updateChallengeProgress() {
         const jarBody = document.getElementById('challenge-jar');
         if (jarBody) {
             jarBody.innerHTML = ''; // Clear existing
-            // Cap visual tokens at 50 to prevent overflow/lag, or just match read count
-            const tokensToShow = Math.min(read, 50);
+            // Logic for Jar Fullness:
+            // If goal <= 50, we show 1 token per book. Size is based on goal.
+            // If goal > 50, we scale down to 50 tokens max. Size is based on 50.
+            // This ensures that when read == goal, the jar looks full (50 tokens of size-for-50).
 
-            // Dynamic sizing based on goal (Area-based)
-            // We want the total area of emojis to fill the jar roughly the same regardless of count.
-            // Area = count * size^2
-            // So size should be proportional to 1/sqrt(count)
-            // Base size for 10 books = 2.5rem
-            // Formula: size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(goal)));
+            let visualGoal = goal;
+            let visualCount = read;
 
-            const size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(goal)));
+            if (goal > 50) {
+                visualGoal = 50;
+                // Scale read count to 0-50 range
+                visualCount = Math.ceil((read / goal) * 50);
+            }
 
-            for (let i = 0; i < tokensToShow; i++) {
+            // Cap visual count at visual goal (so it doesn't overflow if read > goal)
+            visualCount = Math.min(visualCount, visualGoal);
+
+            // Area-based size formula using visualGoal
+            // size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(visualGoal)));
+            const size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(visualGoal)));
+
+            for (let i = 0; i < visualCount; i++) {
                 const token = document.createElement('div');
                 token.classList.add('emoji-token');
                 token.textContent = '📚';
