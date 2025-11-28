@@ -1231,7 +1231,7 @@ async function handleSurpriseMe() {
         const query = `subject:"${randomGenre.label}"`;
 
         const response = await fetch(
-            `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=${randomStartIndex}&maxResults=10&langRestrict=en&key=${API_KEY}`
+            `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=${randomStartIndex}&maxResults=10&langRestrict=en`
         );
         const data = await response.json();
 
