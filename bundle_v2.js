@@ -211,7 +211,7 @@ let recsGrid, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
 
 // Journal Elements
 let wishlistInput, addWishlistBtn, wishlistList, wishlistCount, addSectionBtn, journalSectionsContainer;
-let challengeGoalInput, saveGoalBtn, progressPath, progressText, booksReadCount, booksGoalCount, encouragementMsg;
+let challengeGoalInput, saveGoalBtn, progressBarFill, progressText, booksReadCount, booksGoalCount, encouragementMsg;
 
 // Questionnaire Elements
 let questionnaireView, startBtn, skipBtn;
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     challengeGoalInput = document.getElementById('challenge-goal');
     saveGoalBtn = document.getElementById('save-goal-btn');
-    progressPath = document.getElementById('progress-path');
+    progressBarFill = document.getElementById('progress-bar-fill');
     progressText = document.getElementById('progress-text');
     booksReadCount = document.getElementById('books-read-count');
     booksGoalCount = document.getElementById('books-goal-count');
@@ -1126,6 +1126,9 @@ function setupChallengeListeners() {
     if (saveGoalBtn) {
         saveGoalBtn.addEventListener('click', saveChallengeGoal);
     }
+
+    // Expose logBook to window for onclick handlers
+    window.logBook = logBook;
 }
 
 function loadChallengeGoal() {
@@ -1137,16 +1140,34 @@ function loadChallengeGoal() {
 }
 
 function saveChallengeGoal() {
-    const goal = parseInt(challengeGoalInput.value) || 10;
-    localStorage.setItem('bookFinderChallengeGoal', goal);
+    const goal = parseInt(challengeGoalInput.value);
+    if (goal && goal > 0) {
+        localStorage.setItem('bookFinderChallengeGoal', goal);
+        updateChallengeProgress();
+        alert('Goal updated! 🎯');
+    } else {
+        alert('Please enter a valid number!');
+    }
+}
+
+function logBook(emoji) {
+    let currentRead = parseInt(localStorage.getItem('bookFinderBooksRead')) || 0;
+    currentRead++;
+    localStorage.setItem('bookFinderBooksRead', currentRead);
+
+    // Animation effect could go here
+    alert(`Added a book! ${emoji}`);
     updateChallengeProgress();
-    alert('Goal updated! 🎯');
 }
 
 function updateChallengeProgress() {
-    const goal = parseInt(challengeGoalInput.value) || 10;
-    // Count sections as books read
-    const read = journalData.sections.length;
+    const goal = parseInt(localStorage.getItem('bookFinderChallengeGoal')) || 10;
+    // Ensure input matches saved goal
+    if (challengeGoalInput.value != goal) {
+        challengeGoalInput.value = goal;
+    }
+
+    const read = parseInt(localStorage.getItem('bookFinderBooksRead')) || 0;
 
     booksReadCount.textContent = read;
     booksGoalCount.textContent = goal;
@@ -1155,7 +1176,7 @@ function updateChallengeProgress() {
     if (percentage > 100) percentage = 100;
 
     progressText.textContent = `${percentage}%`;
-    progressPath.setAttribute('stroke-dasharray', `${percentage}, 100`);
+    progressBarFill.style.width = `${percentage}%`;
 
     // Encouragement
     if (percentage === 0) {
@@ -1171,8 +1192,13 @@ function updateChallengeProgress() {
 
 // --- Surprise Me Logic ---
 function setupSurpriseListeners() {
+    // Ensure element exists before adding listener
     if (navSurprise) {
+        // Remove existing listeners to prevent duplicates if re-initialized
+        navSurprise.removeEventListener('click', handleSurpriseMe);
         navSurprise.addEventListener('click', handleSurpriseMe);
+    } else {
+        console.warn('Surprise Me button not found!');
     }
 }
 
