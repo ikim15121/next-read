@@ -975,8 +975,14 @@ function renderBooks(books, container = bookGrid) {
     });
 }
 
-async function openBookDetails(id) {
-    const book = currentBooks.find(b => b.id === id) || await getBookDetails(id);
+async function openBookDetails(bookOrId) {
+    let book;
+    if (typeof bookOrId === 'object') {
+        book = bookOrId;
+    } else {
+        book = currentBooks.find(b => b.id === bookOrId) || await getBookDetails(bookOrId);
+    }
+
     if (!book) return;
 
     const info = book.volumeInfo;
@@ -1146,11 +1152,14 @@ function updateChallengeProgress() {
             // Cap visual tokens at 50 to prevent overflow/lag, or just match read count
             const tokensToShow = Math.min(read, 50);
 
-            // Dynamic sizing based on goal
-            // Inverse relationship: Small goal = Big emojis, Big goal = Small emojis
-            // Base size 2.5rem. 
-            // Formula: size = Math.max(1.0, 3.0 - (goal / 25))
-            const size = Math.max(1.0, 3.0 - (goal / 25));
+            // Dynamic sizing based on goal (Area-based)
+            // We want the total area of emojis to fill the jar roughly the same regardless of count.
+            // Area = count * size^2
+            // So size should be proportional to 1/sqrt(count)
+            // Base size for 10 books = 2.5rem
+            // Formula: size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(goal)));
+
+            const size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(goal)));
 
             for (let i = 0; i < tokensToShow; i++) {
                 const token = document.createElement('div');
@@ -1236,7 +1245,7 @@ async function handleSurpriseMe() {
 
             // 5. Open details
             console.log('Surprise Me: Opening book', randomBook.volumeInfo.title);
-            openBookDetails(randomBook.id);
+            openBookDetails(randomBook);
 
             // Close sidebar if mobile
             if (window.innerWidth <= 768) {
