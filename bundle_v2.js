@@ -1200,13 +1200,18 @@ function updateChallengeProgress() {
 
 // --- Surprise Me Logic ---
 function setupSurpriseListeners() {
+    console.log('Setting up Surprise Me listeners...');
     // Ensure element exists before adding listener
     if (navSurprise) {
+        console.log('Surprise Me button found:', navSurprise);
         // Remove existing listeners to prevent duplicates if re-initialized
         navSurprise.removeEventListener('click', handleSurpriseMe);
-        navSurprise.addEventListener('click', handleSurpriseMe);
+        navSurprise.addEventListener('click', (e) => {
+            console.log('Surprise Me clicked!');
+            handleSurpriseMe(e);
+        });
     } else {
-        console.warn('Surprise Me button not found!');
+        console.error('Surprise Me button NOT found!');
     }
 }
 
