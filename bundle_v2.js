@@ -220,14 +220,14 @@ let readingOptionsContainer, readingNextBtn, readingSkipBtn;
 let authorInput, authorNextBtn, authorSkipBtn, authorBackBtn;
 let genreOptionsContainer, genreNextBtn, genreSkipBtn, genreBackBtn;
 let moodOptionsContainer, moodNextBtn, moodSkipBtn, moodBackBtn;
-let journalOptionsContainer, journalBackBtn, finishBtn;
+let finishBtn;
 
 // State
 let selectedReadingLevel = null;
 let favoriteAuthors = '';
 let selectedGenres = new Set();
 let selectedMoods = new Set();
-let journalPreference = null;
+
 let userPreferences = {
     readingLevel: null,
     authors: '',
@@ -271,10 +271,6 @@ const moods = [
     { id: 'relaxed', label: 'Relaxed', icon: '😌' }
 ];
 
-const journalOptions = [
-    { id: 'yes', label: 'Yes, please!', icon: '📓' },
-    { id: 'no', label: 'No thanks', icon: '❌' }
-];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -328,8 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     moodSkipBtn = document.getElementById('mood-skip-btn');
     moodBackBtn = document.getElementById('mood-back-btn');
 
-    journalOptionsContainer = document.getElementById('journal-options');
-    journalBackBtn = document.getElementById('journal-back-btn');
+
     finishBtn = document.getElementById('finish-btn');
 
     renderOptions();
@@ -386,14 +381,6 @@ function renderOptions() {
         </div>
     `).join('');
 
-    // Render Journal Options
-    journalOptionsContainer.innerHTML = journalOptions.map(j => `
-        <div class="option-btn" data-type="journal" data-value="${j.id}">
-            <span class="option-icon">${j.icon}</span>
-            <span class="option-label">${j.label}</span>
-        </div>
-    `).join('');
-
     // Add click listeners to options
     document.querySelectorAll('.option-btn').forEach(btn => {
         btn.addEventListener('click', () => toggleOption(btn));
@@ -411,13 +398,6 @@ function toggleOption(btn) {
         btn.classList.add('selected');
         selectedReadingLevel = value;
         readingNextBtn.disabled = false;
-    } else if (type === 'journal') {
-        // Single select
-        document.querySelectorAll('[data-type="journal"]').forEach(el => el.classList.remove('selected'));
-        btn.classList.add('selected');
-        journalPreference = value;
-        // Auto advance for journal? Or just enable finish?
-        // Let's just highlight it.
     } else {
         // Multi select (Genre, Mood)
         const set = type === 'genre' ? selectedGenres : selectedMoods;
@@ -566,14 +546,10 @@ function setupEventListeners() {
     genreSkipBtn.addEventListener('click', () => showStep('step-mood'));
     genreBackBtn.addEventListener('click', () => showStep('step-authors'));
 
-    // Mood -> Journal
-    moodNextBtn.addEventListener('click', () => showStep('step-journal'));
-    moodSkipBtn.addEventListener('click', () => showStep('step-journal'));
+    // Mood -> Finish
+    moodNextBtn.addEventListener('click', finishQuestionnaire);
+    moodSkipBtn.addEventListener('click', finishQuestionnaire);
     moodBackBtn.addEventListener('click', () => showStep('step-genres'));
-
-    // Journal -> Finish
-    journalBackBtn.addEventListener('click', () => showStep('step-mood'));
-    finishBtn.addEventListener('click', finishQuestionnaire);
 }
 
 function showStep(stepId) {
@@ -649,7 +625,7 @@ async function finishQuestionnaire() {
         }
 
         // Log Journal Preference
-        console.log('Journal Preference:', journalPreference);
+
 
         // Save Preferences for Auto Recommendations
         savePreferences();
