@@ -139,8 +139,19 @@
                     <h2>Picked Just For You ✨</h2>
                     <button id="retake-quiz-btn" class="secondary-btn small-btn">Update Preferences</button>
                 </div>
-                <div id="recs-grid" class="book-grid">
-                    <!-- Recommendations injected here -->
+
+                <!-- Author Section -->
+                <div id="author-recs-container" class="recs-section hidden">
+                    <h3 class="section-title">From Your Favorite Authors ✍️</h3>
+                    <div id="author-recs-grid" class="book-grid"></div>
+                </div>
+
+                <!-- Genre/Taste Section -->
+                <div id="taste-recs-container" class="recs-section">
+                    <h3 class="section-title">Based on Your Tastes 📚</h3>
+                    <div id="recs-grid" class="book-grid">
+                        <!-- Recommendations injected here -->
+                    </div>
                 </div>
                 <div id="recs-loading" class="loading hidden">
                     <div class="spinner"></div>
@@ -210,12 +221,18 @@
                         </div>
                     </div>
 
-                    <div class="progress-section">
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+                    <div class="challenge-jar-section">
+                        <div class="jar-container">
+                            <div class="jar-lid"></div>
+                            <div class="jar-body" id="challenge-jar">
+                                <!-- Emojis will be injected here -->
+                            </div>
+                            <div class="jar-base"></div>
                         </div>
-                        <p class="percentage-text" id="progress-text">0%</p>
-                        <p class="encouragement" id="encouragement-msg">Let's get started! 🚀</p>
+                        <div class="jar-stats">
+                            <p class="percentage-text" id="progress-text">0%</p>
+                            <p class="encouragement" id="encouragement-msg">Let's get started! 🚀</p>
+                        </div>
                     </div>
 
                     <div class="log-book-section">

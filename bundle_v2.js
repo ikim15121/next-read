@@ -207,7 +207,7 @@ let searchView, recsView, journalView, challengeView;
 
 // Recs Elements
 // Recs Elements
-let recsGrid, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
+let recsGrid, authorRecsGrid, authorRecsContainer, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
 
 // Journal Elements
 let wishlistInput, addWishlistBtn, wishlistList, wishlistCount, addSectionBtn, journalSectionsContainer;
@@ -293,6 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
     challengeView = document.getElementById('challenge-view');
 
     recsGrid = document.getElementById('recs-grid');
+    authorRecsGrid = document.getElementById('author-recs-grid');
+    authorRecsContainer = document.getElementById('author-recs-container');
     recsLoading = document.getElementById('recs-loading');
     recsEmpty = document.getElementById('recs-empty');
     retakeQuizBtn = document.getElementById('retake-quiz-btn');
@@ -724,164 +726,109 @@ function switchView(viewName) {
 }
 
 async function loadRecommendations() {
-    // Check if we have ANY preferences (Reading Level, Authors, OR Genres)
+    console.log('🔄 Loading Recommendations...');
+
+    // Check prefs
     const hasPrefs = userPreferences.readingLevel ||
         (userPreferences.genres && userPreferences.genres.length > 0) ||
         (userPreferences.authors && userPreferences.authors.length > 0);
 
     if (!hasPrefs) {
-        console.log('❌ No preferences found in loadRecommendations');
         recsEmpty.classList.remove('hidden');
+        authorRecsContainer.classList.add('hidden');
         recsGrid.innerHTML = '';
         return;
     }
-    console.log('✅ Preferences found:', userPreferences);
 
     recsEmpty.classList.add('hidden');
     recsLoading.classList.remove('hidden');
+    authorRecsContainer.classList.add('hidden'); // Hide initially
     recsGrid.innerHTML = '';
+    authorRecsGrid.innerHTML = '';
 
-    // Construct Query from Preferences (Reuse logic from finishQuestionnaire but simpler)
-    let queryParts = [];
-    let apiQueryParts = [];
+    try {
+        // 1. Fetch Author Recommendations
+        let authorBooks = [];
+        if (userPreferences.authors) {
+            const authors = userPreferences.authors.split(',').map(a => a.trim()).filter(a => a);
+            // Limit to top 2 authors
+            const targetAuthors = authors.slice(0, 2);
 
-    // Authors
-    if (userPreferences.authors) {
-        const authors = userPreferences.authors.split(',').map(a => a.trim()).filter(a => a.length > 0);
-        if (authors.length > 0) {
-            apiQueryParts.push(`inauthor:"${authors[0]}"`);
+            const authorPromises = targetAuthors.map(author => searchSimilar(null, author));
+            const results = await Promise.all(authorPromises);
+            authorBooks = results.flat();
+
+            // Deduplicate
+            authorBooks = Array.from(new Map(authorBooks.map(b => [b.id, b])).values());
         }
-    }
 
-    // Reading Level
-    if (userPreferences.readingLevel) {
-        const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
-        if (level) queryParts.push(level.query);
-    }
+        // 2. Fetch Taste Recommendations (Genres + Moods + Level)
+        let tasteBooks = [];
 
-    // Genres
-    if (userPreferences.genres.length > 0) {
-        const firstGenreId = userPreferences.genres[0];
-        const g = genres.find(item => item.id === firstGenreId);
-        const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
+        // Construct query for tastes
+        let queryParts = [];
+        let apiQueryParts = [];
 
-        apiQueryParts.push(`subject:"${genreLabel}"`);
-
-        if (userPreferences.genres.length > 1) {
-            // Add second genre as keyword
-            const secondGenreId = userPreferences.genres[1];
-            const g2 = genres.find(item => item.id === secondGenreId);
-            queryParts.push(g2.label);
+        // Reading Level
+        if (userPreferences.readingLevel) {
+            const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
+            if (level) queryParts.push(level.query);
         }
-    }
 
-    let finalQuery = [...apiQueryParts, ...queryParts].join(' ');
+        // Genres
+        if (userPreferences.genres.length > 0) {
+            const firstGenreId = userPreferences.genres[0];
+            const g = genres.find(item => item.id === firstGenreId);
+            const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
+            apiQueryParts.push(`subject:"${genreLabel}"`);
 
-    if (!finalQuery.trim()) {
-        console.log('⚠️ Query is empty. Skipping API search to avoid generic results.');
-    } else {
-        console.log('🔍 Searching for recommendations with query:', finalQuery);
-
-        try {
-            // 1. Try Strict Search (Author + Genre + Level)
-            let strictBooks = await searchBooks(finalQuery);
-            console.log(`📚 Strict Query Found: ${strictBooks.length}`);
-
-            // 2. Try Author Only (if present)
-            let authorBooks = [];
-            if (userPreferences.authors) {
-                const authors = userPreferences.authors.split(',')[0].trim();
-                if (authors) {
-                    // Try strict author
-                    authorBooks = await searchBooks(`inauthor:"${authors}"`);
-                    // If strict fails, try fuzzy
-                    if (authorBooks.length === 0) {
-                        console.log('⚠️ Strict author search failed. Trying Fuzzy Author search...');
-                        authorBooks = await searchBooks(`${authors}`);
-                    }
-                }
-            }
-            console.log(`📚 Author Query Found: ${authorBooks.length}`);
-
-            // 3. Try Genre + Level (Discovery)
-            let genreBooks = [];
-            if (userPreferences.genres.length > 0) {
-                const genreId = userPreferences.genres[0];
-                const g = genres.find(item => item.id === genreId);
-                const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
-
-                let genreQuery = `subject:"${genreLabel}"`;
-                if (userPreferences.readingLevel) {
-                    const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
-                    if (level) genreQuery += ` ${level.query}`;
-                }
-                genreBooks = await searchBooks(genreQuery);
-            }
-            console.log(`📚 Genre Query Found: ${genreBooks.length}`);
-
-            // 4. Combine and Deduplicate
-            // Priority: Strict -> Author -> Genre
-            const allBooks = [...strictBooks, ...authorBooks, ...genreBooks];
-            const uniqueBooks = Array.from(new Map(allBooks.map(book => [book.id, book])).values());
-
-            console.log(`📚 Final Unique Count: ${uniqueBooks.length}`);
-
-            if (uniqueBooks.length > 0) {
-                renderRecs(uniqueBooks, recsGrid);
-                recsLoading.classList.add('hidden');
-                return; // Success!
-            }
-        } catch (error) {
-            console.error("Error loading recs:", error);
-            // Continue to Nuclear Fallback
-        }
-    }
-
-    // Fallback 3: Nuclear Option (Hardcoded Popular Books)
-    console.log('☢️ All searches failed. Deploying Nuclear Fallback...');
-    const nuclearBooks = [
-        {
-            id: 'nuclear1',
-            volumeInfo: {
-                title: "Harry Potter and the Sorcerer's Stone",
-                authors: ["J.K. Rowling"],
-                imageLinks: { thumbnail: "http://books.google.com/books/content?id=wrOQLV6xB-wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
-                description: "Harry Potter has no idea how famous he is. That's because he's being raised by his miserable aunt and uncle who are terrified Harry will learn that he's really a wizard, just as his parents were."
-            }
-        },
-        {
-            id: 'nuclear2',
-            volumeInfo: {
-                title: "Percy Jackson & The Olympians: The Lightning Thief",
-                authors: ["Rick Riordan"],
-                imageLinks: { thumbnail: "http://books.google.com/books/content?id=r0h1MtIu_VcC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
-                description: "Percy Jackson is a good kid, but he can't seem to focus on his schoolwork or control his temper. And lately, being away at boarding school is only getting worse."
-            }
-        },
-        {
-            id: 'nuclear3',
-            volumeInfo: {
-                title: "Wonder",
-                authors: ["R.J. Palacio"],
-                imageLinks: { thumbnail: "http://books.google.com/books/content?id=gjToDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
-                description: "August Pullman was born with a facial difference that, up until now, has prevented him from going to a mainstream school. Starting 5th grade at Beecher Prep, he wants nothing more than to be treated as an ordinary kid."
+            if (userPreferences.genres.length > 1) {
+                const secondGenreId = userPreferences.genres[1];
+                const g2 = genres.find(item => item.id === secondGenreId);
+                queryParts.push(g2.label);
             }
         }
-    ];
 
-    recsGrid.innerHTML = `
-        <div class="info-banner">
-            <p>🕵️‍♀️ We couldn't find exact matches, but here are some all-time favorites!</p>
-        </div>
-    `;
+        // Moods
+        if (userPreferences.moods && userPreferences.moods.length > 0) {
+            const moodList = Array.from(userPreferences.moods).map(id => {
+                const m = moods.find(item => item.id === id);
+                return m ? m.label : '';
+            }).filter(l => l);
+            if (moodList.length > 0) queryParts.push(moodList[0]);
+        }
 
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'book-grid';
-    recsGrid.appendChild(cardsContainer);
+        let finalQuery = [...apiQueryParts, ...queryParts].join(' ');
+        if (!finalQuery.trim()) finalQuery = 'books';
 
-    renderRecs(nuclearBooks, cardsContainer);
-    recsLoading.classList.add('hidden');
+        console.log('🔍 Searching Taste Books:', finalQuery);
+        tasteBooks = await searchBooks(finalQuery);
+
+        // 3. Render
+        recsLoading.classList.add('hidden');
+
+        // Render Authors
+        if (authorBooks.length > 0) {
+            authorRecsContainer.classList.remove('hidden');
+            renderBooks(authorBooks.slice(0, 4), authorRecsGrid);
+        }
+
+        // Render Tastes
+        if (tasteBooks.length > 0) {
+            renderBooks(tasteBooks, recsGrid);
+        } else {
+            if (authorBooks.length === 0) {
+                recsEmpty.classList.remove('hidden');
+            }
+        }
+
+    } catch (err) {
+        console.error('Error loading recs:', err);
+        recsLoading.classList.add('hidden');
+        recsEmpty.classList.remove('hidden');
+    }
 }
+
 
 // Need to make sure renderBooks is available or we implement a simple version here
 function renderRecs(books, container) {
@@ -1192,6 +1139,24 @@ function updateChallengeProgress() {
         if (progressText) progressText.textContent = `${percentage}%`;
         if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
 
+        // Update Jar
+        const jarBody = document.getElementById('challenge-jar');
+        if (jarBody) {
+            jarBody.innerHTML = ''; // Clear existing
+            // Cap visual tokens at 50 to prevent overflow/lag, or just match read count
+            const tokensToShow = Math.min(read, 50);
+
+            for (let i = 0; i < tokensToShow; i++) {
+                const token = document.createElement('div');
+                token.classList.add('emoji-token');
+                token.textContent = '📚'; // Could vary this based on genre later
+                // Randomize rotation slightly for natural look
+                const rotation = Math.random() * 40 - 20;
+                token.style.transform = `rotate(${rotation}deg)`;
+                jarBody.appendChild(token);
+            }
+        }
+
         // Encouragement
         if (encouragementMsg) {
             if (percentage === 0) {
@@ -1241,9 +1206,20 @@ async function handleSurpriseMe() {
         const randomStartIndex = Math.floor(Math.random() * 20);
         const query = `subject:"${randomGenre.label}"`;
 
-        const response = await fetch(
+        // Create a timeout promise
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timed out')), 8000)
+        );
+
+        const fetchPromise = fetch(
             `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=${randomStartIndex}&maxResults=10&langRestrict=en`
         );
+
+        // Race fetch against timeout
+        const response = await Promise.race([fetchPromise, timeout]);
+
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
         const data = await response.json();
 
         if (data.items && data.items.length > 0) {
@@ -1251,6 +1227,7 @@ async function handleSurpriseMe() {
             const randomBook = data.items[Math.floor(Math.random() * data.items.length)];
 
             // 5. Open details
+            console.log('Surprise Me: Opening book', randomBook.volumeInfo.title);
             openBookDetails(randomBook);
 
             // Close sidebar if mobile
