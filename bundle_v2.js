@@ -908,9 +908,9 @@ bookModal.addEventListener('click', (e) => {
 
 // Handlers
 
-function renderBooks(books) {
+function renderBooks(books, container = bookGrid) {
     if (!books || books.length === 0) {
-        bookGrid.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
+        container.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
         return;
     }
 
@@ -920,7 +920,7 @@ function renderBooks(books) {
         { term: 'Award', label: '🏅 Award Winner' }
     ];
 
-    bookGrid.innerHTML = books.map(book => {
+    container.innerHTML = books.map(book => {
         const info = book.volumeInfo;
         // Get the best available image and remove the curl effect
         let thumbnail = info.imageLinks?.thumbnail?.replace('http:', 'https:').replace('&edge=curl', '');
@@ -1146,10 +1146,18 @@ function updateChallengeProgress() {
             // Cap visual tokens at 50 to prevent overflow/lag, or just match read count
             const tokensToShow = Math.min(read, 50);
 
+            // Dynamic sizing based on goal
+            // Inverse relationship: Small goal = Big emojis, Big goal = Small emojis
+            // Base size 2.5rem. 
+            // Formula: size = Math.max(1.0, 3.0 - (goal / 25))
+            const size = Math.max(1.0, 3.0 - (goal / 25));
+
             for (let i = 0; i < tokensToShow; i++) {
                 const token = document.createElement('div');
                 token.classList.add('emoji-token');
-                token.textContent = '📚'; // Could vary this based on genre later
+                token.textContent = '📚';
+                token.style.fontSize = `${size}rem`;
+
                 // Randomize rotation slightly for natural look
                 const rotation = Math.random() * 40 - 20;
                 token.style.transform = `rotate(${rotation}deg)`;
@@ -1228,7 +1236,7 @@ async function handleSurpriseMe() {
 
             // 5. Open details
             console.log('Surprise Me: Opening book', randomBook.volumeInfo.title);
-            openBookDetails(randomBook);
+            openBookDetails(randomBook.id);
 
             // Close sidebar if mobile
             if (window.innerWidth <= 768) {
