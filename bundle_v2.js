@@ -211,7 +211,7 @@ let recsGrid, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
 
 // Journal Elements
 let wishlistInput, addWishlistBtn, wishlistList, wishlistCount, addSectionBtn, journalSectionsContainer;
-let challengeGoalInput, saveGoalBtn, progressBarFill, progressText, booksReadCount, booksGoalCount, encouragementMsg;
+let challengeGoalInput, saveGoalBtn, progressBarFill, progressText, booksReadCount, booksGoalCount, encouragementMsg, resetChallengeBtn;
 
 // Questionnaire Elements
 let questionnaireView, startBtn, skipBtn;
@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     booksReadCount = document.getElementById('books-read-count');
     booksGoalCount = document.getElementById('books-goal-count');
     encouragementMsg = document.getElementById('encouragement-msg');
+    resetChallengeBtn = document.getElementById('reset-challenge-btn');
 
     questionnaireView = document.getElementById('questionnaire-view');
     startBtn = document.getElementById('start-btn');
@@ -1126,6 +1127,9 @@ function setupChallengeListeners() {
     if (saveGoalBtn) {
         saveGoalBtn.addEventListener('click', saveChallengeGoal);
     }
+    if (resetChallengeBtn) {
+        resetChallengeBtn.addEventListener('click', resetChallenge);
+    }
 
     // Expose logBook to window for onclick handlers
     window.logBook = logBook;
@@ -1147,6 +1151,13 @@ function saveChallengeGoal() {
         alert('Goal updated! 🎯');
     } else {
         alert('Please enter a valid number!');
+    }
+}
+
+function resetChallenge() {
+    if (confirm('Are you sure you want to start over? This will reset your progress to 0.')) {
+        localStorage.setItem('bookFinderBooksRead', 0);
+        updateChallengeProgress();
     }
 }
 
@@ -1247,11 +1258,12 @@ async function handleSurpriseMe() {
                 toggleSidebar();
             }
         } else {
+            console.warn('Surprise Me: No books found.');
             alert('Oops! The magic dice rolled off the table. Try again!');
         }
     } catch (err) {
         console.error('Surprise Me Error:', err);
-        alert('Magic failed! 🪄 Please try again.');
+        alert(`Magic failed! 🪄 Error: ${err.message}`);
     } finally {
         navSurprise.innerHTML = originalText;
         navSurprise.disabled = false;

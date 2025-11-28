@@ -1111,6 +1111,21 @@ body {
     color: var(--primary-color);
 }
 
+.text-btn-small {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 0.2rem;
+    padding: 0;
+}
+
+.text-btn-small:hover {
+    color: var(--primary-color);
+}
+
 .goal-input-wrapper {
     display: flex;
     align-items: center;
