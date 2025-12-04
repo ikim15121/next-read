@@ -200,10 +200,10 @@ const closeModalBtn = document.getElementById('close-modal');
 
 // Sidebar Elements
 let menuBtn, sidebar, sidebarOverlay, closeSidebarBtn;
-let navSearch, navRecs, navJournal, navChallenge, navSurprise;
+let navSearch, navRecs, navJournal, navChallenge, navSurprise, navWishlist, navAchievements;
 
 // Views
-let searchView, recsView, journalView, challengeView;
+let searchView, recsView, journalView, challengeView, wishlistView, achievementsView;
 
 // Recs Elements
 // Recs Elements
@@ -240,6 +240,16 @@ let journalData = {
     sections: []
 };
 let currentBooks = [];
+let unlockedAchievements = JSON.parse(localStorage.getItem('bookFinderAchievements')) || [];
+
+const achievements = [
+    { id: 'first_recs', title: 'Explorer 🧭', icon: '🧭', desc: 'Got your first recommendations' },
+    { id: 'first_read', title: 'Bookworm 🐛', icon: '🐛', desc: 'Logged your first book' },
+    { id: 'wishlist_add', title: 'Dreamer 💭', icon: '💭', desc: 'Added a book to wishlist' },
+    { id: 'jar_full', title: 'Goal Crusher 🏆', icon: '🏆', desc: 'Filled the Emoji Jar' },
+    { id: 'surprise_me', title: 'Adventurer 🎲', icon: '🎲', desc: 'Used Surprise Me' },
+    { id: 'social', title: 'Chatterbox 🗣️', icon: '🗣️', desc: 'Checked a Reddit discussion' }
+];
 
 // Data
 const readingLevels = [
@@ -273,6 +283,60 @@ const moods = [
 ];
 
 
+// --- Achievements Logic ---
+
+function unlockAchievement(id) {
+    if (!unlockedAchievements.includes(id)) {
+        unlockedAchievements.push(id);
+        localStorage.setItem('bookFinderAchievements', JSON.stringify(unlockedAchievements));
+
+        const achievement = achievements.find(a => a.id === id);
+        if (achievement) {
+            showAchievementToast(achievement);
+        }
+        renderAchievements();
+    }
+}
+
+function showAchievementToast(achievement) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="toast-icon">${achievement.icon}</div>
+        <div class="toast-content">
+            <h4>Achievement Unlocked!</h4>
+            <p>${achievement.title}</p>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideInRight 0.5s reverse forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 500);
+    }, 3000);
+}
+
+function renderAchievements() {
+    const grid = document.getElementById('achievements-grid');
+    if (!grid) return;
+
+    grid.innerHTML = achievements.map(ach => {
+        const isUnlocked = unlockedAchievements.includes(ach.id);
+        return `
+            <div class="badge ${isUnlocked ? 'unlocked' : ''}">
+                <div class="badge-icon">${ach.icon}</div>
+                <div class="badge-title">${ach.title}</div>
+                <div class="badge-desc">${ach.desc}</div>
+            </div>
+        `;
+    }).join('');
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Bundle Initializing...');
@@ -287,11 +351,17 @@ document.addEventListener('DOMContentLoaded', () => {
     navJournal = document.getElementById('nav-journal');
     navChallenge = document.getElementById('nav-challenge');
     navSurprise = document.getElementById('nav-surprise');
+    navWishlist = document.getElementById('nav-wishlist');
+    navAchievements = document.getElementById('nav-achievements');
     searchView = document.getElementById('search-view');
     recsView = document.getElementById('recommendations-view');
-    journalView = document.getElementById('journal-view');
+    journalView = document.getElementById('journal-view'); // Note: This might be unused if we split it
     challengeView = document.getElementById('challenge-view');
+    wishlistView = document.getElementById('wishlist-view');
+    achievementsView = document.getElementById('achievements-view');
 
+    // Nav
+    navSearch = document.querySelector('.menu-item:nth-child(1)');
     recsGrid = document.getElementById('recs-grid');
     authorRecsGrid = document.getElementById('author-recs-grid');
     authorRecsContainer = document.getElementById('author-recs-container');
@@ -350,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSurpriseListeners();
     loadChallengeGoal();
     loadPreferences();
+    renderAchievements();
 });
 
 function loadPreferences() {
@@ -459,6 +530,9 @@ function addToWishlist() {
     wishlistInput.value = '';
     saveJournal();
     renderWishlist();
+
+    // Unlock Achievement: Wishlist Add
+    unlockAchievement('wishlist_add');
 }
 
 function removeFromWishlist(id) {
@@ -672,6 +746,10 @@ function setupJournalListeners() {
     // navSearch removed
     navRecs.addEventListener('click', () => switchView('recs'));
     navJournal.addEventListener('click', () => switchView('journal'));
+    navChallenge.addEventListener('click', () => switchView('challenge'));
+    navSurprise.addEventListener('click', handleSurpriseMe);
+    if (navWishlist) navWishlist.addEventListener('click', () => switchView('wishlist'));
+    if (navAchievements) navAchievements.addEventListener('click', () => switchView('achievements'));
 
     // Recs Actions
     retakeQuizBtn.addEventListener('click', startQuestionnaire);
@@ -702,26 +780,38 @@ function switchView(viewName) {
     // Hide all
     // searchView removed
     recsView.classList.add('hidden');
-    journalView.classList.add('hidden');
+    if (journalView) journalView.classList.add('hidden');
     challengeView.classList.add('hidden');
+    if (wishlistView) wishlistView.classList.add('hidden');
+    if (achievementsView) achievementsView.classList.add('hidden');
 
     // Deactivate navs
     // navSearch removed
-    navRecs.classList.remove('active');
-    navJournal.classList.remove('active');
-    navChallenge.classList.remove('active');
+    if (navRecs) navRecs.classList.remove('active');
+    if (navJournal) navJournal.classList.remove('active');
+    if (navChallenge) navChallenge.classList.remove('active');
+    if (navWishlist) navWishlist.classList.remove('active');
+    if (navAchievements) navAchievements.classList.remove('active');
 
     if (viewName === 'recs') {
         recsView.classList.remove('hidden');
-        navRecs.classList.add('active');
+        if (navRecs) navRecs.classList.add('active');
         loadRecommendations();
     } else if (viewName === 'journal') {
-        journalView.classList.remove('hidden');
-        navJournal.classList.add('active');
+        if (journalView) journalView.classList.remove('hidden');
+        if (navJournal) navJournal.classList.add('active');
     } else if (viewName === 'challenge') {
         challengeView.classList.remove('hidden');
-        navChallenge.classList.add('active');
+        if (navChallenge) navChallenge.classList.add('active');
         updateChallengeProgress();
+    } else if (viewName === 'wishlist') {
+        if (wishlistView) wishlistView.classList.remove('hidden');
+        if (navWishlist) navWishlist.classList.add('active');
+        renderWishlist();
+    } else if (viewName === 'achievements') {
+        if (achievementsView) achievementsView.classList.remove('hidden');
+        if (navAchievements) navAchievements.classList.add('active');
+        renderAchievements();
     }
 }
 
@@ -822,6 +912,9 @@ async function loadRecommendations() {
             }
         }
 
+        // Unlock Achievement: First Recs
+        unlockAchievement('first_recs');
+
     } catch (err) {
         console.error('Error loading recs:', err);
         recsLoading.classList.add('hidden');
@@ -886,7 +979,11 @@ window.showBookDetails = async (bookId) => {
 window.addToWishlistFromModal = (title) => {
     journalData.wishlist.push({ id: Date.now(), title });
     saveJournal();
-    alert(`Added "${title}" to your wishlist!`);
+
+    // Unlock Achievement: Wishlist Add
+    unlockAchievement('wishlist_add');
+
+    alert(`Added "${title}" to your wishlist! ❤️`);
 };
 
 // ... (rest of existing functions)
@@ -958,7 +1055,7 @@ function renderBooks(books, container = bookGrid) {
                         </div>
                         <p class="reddit-text">"${cleanSnippet}"</p>
                         <div class="reddit-actions">
-                            <a href="${redditLink}" target="_blank" class="reddit-link">
+                            <a href="${redditLink}" target="_blank" class="reddit-link" onclick="unlockAchievement('social')">
                                 <span class="reddit-icon">💬</span> Discuss on Reddit
                             </a>
                             <span class="reddit-upvotes">⬆️ ${(info.ratingsCount || 1) * 10}</span>
@@ -1122,6 +1219,9 @@ function logBook(emoji) {
     // Animation effect could go here
     // alert(`Added a book! ${emoji}`);
     updateChallengeProgress();
+
+    // Unlock Achievement: First Read
+    unlockAchievement('first_read');
 }
 
 function updateChallengeProgress() {
@@ -1180,6 +1280,11 @@ function updateChallengeProgress() {
                 const rotation = Math.random() * 40 - 20;
                 token.style.transform = `rotate(${rotation}deg)`;
                 jarBody.appendChild(token);
+            }
+
+            // Unlock Achievement: Jar Full
+            if (read >= goal) {
+                unlockAchievement('jar_full');
             }
         }
 
@@ -1255,6 +1360,9 @@ async function handleSurpriseMe() {
             // 5. Open details
             console.log('Surprise Me: Opening book', randomBook.volumeInfo.title);
             openBookDetails(randomBook);
+
+            // Unlock Achievement: Surprise Me
+            unlockAchievement('surprise_me');
 
             // Close sidebar if mobile
             if (window.innerWidth <= 768) {

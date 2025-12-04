@@ -31,6 +31,12 @@
                 <button id="nav-surprise" class="nav-item">
                     <span class="icon">🎲</span> Surprise Me!
                 </button>
+                <button id="nav-wishlist" class="nav-item">
+                    <span class="icon">❤️</span> Wishlist
+                </button>
+                <button id="nav-achievements" class="nav-item">
+                    <span class="icon">🏆</span> Achievements
+                </button>
             </nav>
         </div>
         <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
@@ -167,27 +173,12 @@
             <div id="journal-view" class="journal-view hidden">
                 <div class="journal-header">
                     <h2>My Reading Journal 📓</h2>
-                    <p>Track your wishlist and write your thoughts.</p>
+                    <p>Write your thoughts and reviews.</p>
                 </div>
 
                 <div class="journal-grid">
-                    <!-- Wishlist Panel -->
-                    <div class="journal-panel wishlist-panel">
-                        <div class="panel-header">
-                            <h3>Wishlist ✨</h3>
-                            <span class="count-badge" id="wishlist-count">0</span>
-                        </div>
-                        <div class="add-item-form">
-                            <input type="text" id="wishlist-input" placeholder="Add a book title...">
-                            <button id="add-wishlist-btn" class="icon-btn-small">+</button>
-                        </div>
-                        <ul id="wishlist-list" class="wishlist-list">
-                            <!-- Items injected via JS -->
-                        </ul>
-                    </div>
-
                     <!-- Summaries Panel -->
-                    <div class="journal-panel summaries-panel">
+                    <div class="journal-panel summaries-panel" style="width: 100%;">
                         <div class="panel-header">
                             <h3>My Notes 📝</h3>
                             <button id="add-section-btn" class="secondary-btn small-btn">+ New Section</button>
@@ -196,6 +187,23 @@
                             <!-- Sections injected via JS -->
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Wishlist View -->
+            <div id="wishlist-view" class="view-section hidden">
+                <div class="journal-panel wishlist-panel" style="max-width: 800px; margin: 0 auto;">
+                    <div class="panel-header">
+                        <h3>My Wishlist ✨</h3>
+                        <span class="count-badge" id="wishlist-count">0</span>
+                    </div>
+                    <div class="add-item-form">
+                        <input type="text" id="wishlist-input" placeholder="Add a book title...">
+                        <button id="add-wishlist-btn" class="icon-btn-small">+</button>
+                    </div>
+                    <ul id="wishlist-list" class="wishlist-list">
+                        <!-- Items injected via JS -->
+                    </ul>
                 </div>
             </div>
 
@@ -256,6 +264,19 @@
             </div>
         </main>
 
+        <!-- 5. Achievements View (The Notebook) -->
+        <section id="achievements-view" class="view-section hidden">
+            <div class="notebook-container">
+                <div class="notebook-header">
+                    <h1>My Sticker Book 📒</h1>
+                    <p>Collect stickers by reading and exploring!</p>
+                </div>
+                <div class="badges-grid" id="achievements-grid">
+                    <!-- Badges will be inserted here -->
+                </div>
+            </div>
+        </section>
+
         <!-- Book Details Modal -->
         <div id="book-modal" class="modal hidden">
             <div class="modal-content">
@@ -273,7 +294,7 @@
             return false;
         };
     </script>
-    <script src="bundle_v2.js"></script>
+    <script src="bundle_v2.js?v=3"></script>
 
     <!-- Fallback Script: Safety net for the menu! -->
     <script>
