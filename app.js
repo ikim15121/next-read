@@ -76,9 +76,12 @@ function setupJournalListeners() {
 }
 
 function startQuestionnaire() {
-    questionnaireView.classList.remove('hidden');
+    console.log('Starting Questionnaire');
+    const qView = document.getElementById('questionnaire-view');
+    if (!qView) console.error('Questionnaire view not found!');
+    qView.classList.remove('hidden');
+    console.log('Removed hidden class');
     showStep('step-welcome');
-    // Reset state if needed, or keep previous answers pre-selected
 }
 
 function switchView(viewName) {
@@ -548,8 +551,15 @@ function setupEventListeners() {
 }
 
 function showStep(stepId) {
+    console.log(`Showing step: ${stepId}`);
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById(stepId).classList.add('active');
+    const step = document.getElementById(stepId);
+    if (step) {
+        step.classList.add('active');
+        console.log(`Step ${stepId} activated`);
+    } else {
+        console.error(`Step ${stepId} not found!`);
+    }
 }
 
 async function finishQuestionnaire() {

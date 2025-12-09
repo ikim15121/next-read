@@ -31,12 +31,6 @@
                 <button id="nav-surprise" class="nav-item">
                     <span class="icon">🎲</span> Surprise Me!
                 </button>
-                <button id="nav-wishlist" class="nav-item">
-                    <span class="icon">❤️</span> Wishlist
-                </button>
-                <button id="nav-achievements" class="nav-item">
-                    <span class="icon">🏆</span> Achievements
-                </button>
             </nav>
         </div>
         <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
@@ -145,19 +139,8 @@
                     <h2>Picked Just For You ✨</h2>
                     <button id="retake-quiz-btn" class="secondary-btn small-btn">Update Preferences</button>
                 </div>
-
-                <!-- Author Section -->
-                <div id="author-recs-container" class="recs-section hidden">
-                    <h3 class="section-title">From Your Favorite Authors ✍️</h3>
-                    <div id="author-recs-grid" class="book-grid"></div>
-                </div>
-
-                <!-- Genre/Taste Section -->
-                <div id="taste-recs-container" class="recs-section">
-                    <h3 class="section-title">Based on Your Tastes 📚</h3>
-                    <div id="recs-grid" class="book-grid">
-                        <!-- Recommendations injected here -->
-                    </div>
+                <div id="recs-grid" class="book-grid">
+                    <!-- Recommendations injected here -->
                 </div>
                 <div id="recs-loading" class="loading hidden">
                     <div class="spinner"></div>
@@ -173,12 +156,27 @@
             <div id="journal-view" class="journal-view hidden">
                 <div class="journal-header">
                     <h2>My Reading Journal 📓</h2>
-                    <p>Write your thoughts and reviews.</p>
+                    <p>Track your wishlist and write your thoughts.</p>
                 </div>
 
                 <div class="journal-grid">
+                    <!-- Wishlist Panel -->
+                    <div class="journal-panel wishlist-panel">
+                        <div class="panel-header">
+                            <h3>Wishlist ✨</h3>
+                            <span class="count-badge" id="wishlist-count">0</span>
+                        </div>
+                        <div class="add-item-form">
+                            <input type="text" id="wishlist-input" placeholder="Add a book title...">
+                            <button id="add-wishlist-btn" class="icon-btn-small">+</button>
+                        </div>
+                        <ul id="wishlist-list" class="wishlist-list">
+                            <!-- Items injected via JS -->
+                        </ul>
+                    </div>
+
                     <!-- Summaries Panel -->
-                    <div class="journal-panel summaries-panel" style="width: 100%;">
+                    <div class="journal-panel summaries-panel">
                         <div class="panel-header">
                             <h3>My Notes 📝</h3>
                             <button id="add-section-btn" class="secondary-btn small-btn">+ New Section</button>
@@ -187,23 +185,6 @@
                             <!-- Sections injected via JS -->
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Wishlist View -->
-            <div id="wishlist-view" class="view-section hidden">
-                <div class="journal-panel wishlist-panel" style="max-width: 800px; margin: 0 auto;">
-                    <div class="panel-header">
-                        <h3>My Wishlist ✨</h3>
-                        <span class="count-badge" id="wishlist-count">0</span>
-                    </div>
-                    <div class="add-item-form">
-                        <input type="text" id="wishlist-input" placeholder="Add a book title...">
-                        <button id="add-wishlist-btn" class="icon-btn-small">+</button>
-                    </div>
-                    <ul id="wishlist-list" class="wishlist-list">
-                        <!-- Items injected via JS -->
-                    </ul>
                 </div>
             </div>
 
@@ -229,18 +210,12 @@
                         </div>
                     </div>
 
-                    <div class="challenge-jar-section">
-                        <div class="jar-container">
-                            <div class="jar-lid"></div>
-                            <div class="jar-body" id="challenge-jar">
-                                <!-- Emojis will be injected here -->
-                            </div>
-                            <div class="jar-base"></div>
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
                         </div>
-                        <div class="jar-stats">
-                            <p class="percentage-text" id="progress-text">0%</p>
-                            <p class="encouragement" id="encouragement-msg">Let's get started! 🚀</p>
-                        </div>
+                        <p class="percentage-text" id="progress-text">0%</p>
+                        <p class="encouragement" id="encouragement-msg">Let's get started! 🚀</p>
                     </div>
 
                     <div class="log-book-section">
@@ -264,19 +239,6 @@
             </div>
         </main>
 
-        <!-- 5. Achievements View (The Notebook) -->
-        <section id="achievements-view" class="view-section hidden">
-            <div class="notebook-container">
-                <div class="notebook-header">
-                    <h1>My Sticker Book 📒</h1>
-                    <p>Collect stickers by reading and exploring!</p>
-                </div>
-                <div class="badges-grid" id="achievements-grid">
-                    <!-- Badges will be inserted here -->
-                </div>
-            </div>
-        </section>
-
         <!-- Book Details Modal -->
         <div id="book-modal" class="modal hidden">
             <div class="modal-content">
@@ -294,7 +256,7 @@
             return false;
         };
     </script>
-    <script src="bundle_v2.js?v=3"></script>
+    <script src="bundle_v2.js"></script>
 
     <!-- Fallback Script: Safety net for the menu! -->
     <script>

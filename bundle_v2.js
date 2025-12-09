@@ -200,14 +200,14 @@ const closeModalBtn = document.getElementById('close-modal');
 
 // Sidebar Elements
 let menuBtn, sidebar, sidebarOverlay, closeSidebarBtn;
-let navSearch, navRecs, navJournal, navChallenge, navSurprise, navWishlist, navAchievements;
+let navSearch, navRecs, navJournal, navChallenge, navSurprise;
 
 // Views
-let searchView, recsView, journalView, challengeView, wishlistView, achievementsView;
+let searchView, recsView, journalView, challengeView;
 
 // Recs Elements
 // Recs Elements
-let recsGrid, authorRecsGrid, authorRecsContainer, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
+let recsGrid, recsLoading, recsEmpty, retakeQuizBtn, takeQuizBtn;
 
 // Journal Elements
 let wishlistInput, addWishlistBtn, wishlistList, wishlistCount, addSectionBtn, journalSectionsContainer;
@@ -240,16 +240,6 @@ let journalData = {
     sections: []
 };
 let currentBooks = [];
-let unlockedAchievements = JSON.parse(localStorage.getItem('bookFinderAchievements')) || [];
-
-const achievements = [
-    { id: 'first_recs', title: 'Explorer 🧭', icon: '🧭', desc: 'Got your first recommendations' },
-    { id: 'first_read', title: 'Bookworm 🐛', icon: '🐛', desc: 'Logged your first book' },
-    { id: 'wishlist_add', title: 'Dreamer 💭', icon: '💭', desc: 'Added a book to wishlist' },
-    { id: 'jar_full', title: 'Goal Crusher 🏆', icon: '🏆', desc: 'Filled the Emoji Jar' },
-    { id: 'surprise_me', title: 'Adventurer 🎲', icon: '🎲', desc: 'Used Surprise Me' },
-    { id: 'social', title: 'Chatterbox 🗣️', icon: '🗣️', desc: 'Checked a Reddit discussion' }
-];
 
 // Data
 const readingLevels = [
@@ -283,60 +273,6 @@ const moods = [
 ];
 
 
-// --- Achievements Logic ---
-
-function unlockAchievement(id) {
-    if (!unlockedAchievements.includes(id)) {
-        unlockedAchievements.push(id);
-        localStorage.setItem('bookFinderAchievements', JSON.stringify(unlockedAchievements));
-
-        const achievement = achievements.find(a => a.id === id);
-        if (achievement) {
-            showAchievementToast(achievement);
-        }
-        renderAchievements();
-    }
-}
-
-function showAchievementToast(achievement) {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = 'achievement-toast';
-    toast.innerHTML = `
-        <div class="toast-icon">${achievement.icon}</div>
-        <div class="toast-content">
-            <h4>Achievement Unlocked!</h4>
-            <p>${achievement.title}</p>
-        </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'slideInRight 0.5s reverse forwards';
-        setTimeout(() => {
-            toast.remove();
-        }, 500);
-    }, 3000);
-}
-
-function renderAchievements() {
-    const grid = document.getElementById('achievements-grid');
-    if (!grid) return;
-
-    grid.innerHTML = achievements.map(ach => {
-        const isUnlocked = unlockedAchievements.includes(ach.id);
-        return `
-            <div class="badge ${isUnlocked ? 'unlocked' : ''}">
-                <div class="badge-icon">${ach.icon}</div>
-                <div class="badge-title">${ach.title}</div>
-                <div class="badge-desc">${ach.desc}</div>
-            </div>
-        `;
-    }).join('');
-}
-
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Bundle Initializing...');
@@ -351,20 +287,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navJournal = document.getElementById('nav-journal');
     navChallenge = document.getElementById('nav-challenge');
     navSurprise = document.getElementById('nav-surprise');
-    navWishlist = document.getElementById('nav-wishlist');
-    navAchievements = document.getElementById('nav-achievements');
     searchView = document.getElementById('search-view');
     recsView = document.getElementById('recommendations-view');
-    journalView = document.getElementById('journal-view'); // Note: This might be unused if we split it
+    journalView = document.getElementById('journal-view');
     challengeView = document.getElementById('challenge-view');
-    wishlistView = document.getElementById('wishlist-view');
-    achievementsView = document.getElementById('achievements-view');
 
-    // Nav
-    navSearch = document.querySelector('.menu-item:nth-child(1)');
     recsGrid = document.getElementById('recs-grid');
-    authorRecsGrid = document.getElementById('author-recs-grid');
-    authorRecsContainer = document.getElementById('author-recs-container');
     recsLoading = document.getElementById('recs-loading');
     recsEmpty = document.getElementById('recs-empty');
     retakeQuizBtn = document.getElementById('retake-quiz-btn');
@@ -420,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSurpriseListeners();
     loadChallengeGoal();
     loadPreferences();
-    renderAchievements();
 });
 
 function loadPreferences() {
@@ -530,9 +457,6 @@ function addToWishlist() {
     wishlistInput.value = '';
     saveJournal();
     renderWishlist();
-
-    // Unlock Achievement: Wishlist Add
-    unlockAchievement('wishlist_add');
 }
 
 function removeFromWishlist(id) {
@@ -746,10 +670,6 @@ function setupJournalListeners() {
     // navSearch removed
     navRecs.addEventListener('click', () => switchView('recs'));
     navJournal.addEventListener('click', () => switchView('journal'));
-    navChallenge.addEventListener('click', () => switchView('challenge'));
-    navSurprise.addEventListener('click', handleSurpriseMe);
-    if (navWishlist) navWishlist.addEventListener('click', () => switchView('wishlist'));
-    if (navAchievements) navAchievements.addEventListener('click', () => switchView('achievements'));
 
     // Recs Actions
     retakeQuizBtn.addEventListener('click', startQuestionnaire);
@@ -780,148 +700,188 @@ function switchView(viewName) {
     // Hide all
     // searchView removed
     recsView.classList.add('hidden');
-    if (journalView) journalView.classList.add('hidden');
+    journalView.classList.add('hidden');
     challengeView.classList.add('hidden');
-    if (wishlistView) wishlistView.classList.add('hidden');
-    if (achievementsView) achievementsView.classList.add('hidden');
 
     // Deactivate navs
     // navSearch removed
-    if (navRecs) navRecs.classList.remove('active');
-    if (navJournal) navJournal.classList.remove('active');
-    if (navChallenge) navChallenge.classList.remove('active');
-    if (navWishlist) navWishlist.classList.remove('active');
-    if (navAchievements) navAchievements.classList.remove('active');
+    navRecs.classList.remove('active');
+    navJournal.classList.remove('active');
+    navChallenge.classList.remove('active');
 
     if (viewName === 'recs') {
         recsView.classList.remove('hidden');
-        if (navRecs) navRecs.classList.add('active');
+        navRecs.classList.add('active');
         loadRecommendations();
     } else if (viewName === 'journal') {
-        if (journalView) journalView.classList.remove('hidden');
-        if (navJournal) navJournal.classList.add('active');
+        journalView.classList.remove('hidden');
+        navJournal.classList.add('active');
     } else if (viewName === 'challenge') {
         challengeView.classList.remove('hidden');
-        if (navChallenge) navChallenge.classList.add('active');
+        navChallenge.classList.add('active');
         updateChallengeProgress();
-    } else if (viewName === 'wishlist') {
-        if (wishlistView) wishlistView.classList.remove('hidden');
-        if (navWishlist) navWishlist.classList.add('active');
-        renderWishlist();
-    } else if (viewName === 'achievements') {
-        if (achievementsView) achievementsView.classList.remove('hidden');
-        if (navAchievements) navAchievements.classList.add('active');
-        renderAchievements();
     }
 }
 
 async function loadRecommendations() {
-    console.log('🔄 Loading Recommendations...');
-
-    // Check prefs
+    // Check if we have ANY preferences (Reading Level, Authors, OR Genres)
     const hasPrefs = userPreferences.readingLevel ||
         (userPreferences.genres && userPreferences.genres.length > 0) ||
         (userPreferences.authors && userPreferences.authors.length > 0);
 
     if (!hasPrefs) {
+        console.log('❌ No preferences found in loadRecommendations');
         recsEmpty.classList.remove('hidden');
-        authorRecsContainer.classList.add('hidden');
         recsGrid.innerHTML = '';
         return;
     }
+    console.log('✅ Preferences found:', userPreferences);
 
     recsEmpty.classList.add('hidden');
     recsLoading.classList.remove('hidden');
-    authorRecsContainer.classList.add('hidden'); // Hide initially
     recsGrid.innerHTML = '';
-    authorRecsGrid.innerHTML = '';
 
-    try {
-        // 1. Fetch Author Recommendations
-        let authorBooks = [];
-        if (userPreferences.authors) {
-            const authors = userPreferences.authors.split(',').map(a => a.trim()).filter(a => a);
-            // Limit to top 2 authors
-            const targetAuthors = authors.slice(0, 2);
+    // Construct Query from Preferences (Reuse logic from finishQuestionnaire but simpler)
+    let queryParts = [];
+    let apiQueryParts = [];
 
-            const authorPromises = targetAuthors.map(author => searchSimilar(null, author));
-            const results = await Promise.all(authorPromises);
-            authorBooks = results.flat();
-
-            // Deduplicate
-            authorBooks = Array.from(new Map(authorBooks.map(b => [b.id, b])).values());
+    // Authors
+    if (userPreferences.authors) {
+        const authors = userPreferences.authors.split(',').map(a => a.trim()).filter(a => a.length > 0);
+        if (authors.length > 0) {
+            apiQueryParts.push(`inauthor:"${authors[0]}"`);
         }
-
-        // 2. Fetch Taste Recommendations (Genres + Moods + Level)
-        let tasteBooks = [];
-
-        // Construct query for tastes
-        let queryParts = [];
-        let apiQueryParts = [];
-
-        // Reading Level
-        if (userPreferences.readingLevel) {
-            const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
-            if (level) queryParts.push(level.query);
-        }
-
-        // Genres
-        if (userPreferences.genres.length > 0) {
-            const firstGenreId = userPreferences.genres[0];
-            const g = genres.find(item => item.id === firstGenreId);
-            const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
-            apiQueryParts.push(`subject:"${genreLabel}"`);
-
-            if (userPreferences.genres.length > 1) {
-                const secondGenreId = userPreferences.genres[1];
-                const g2 = genres.find(item => item.id === secondGenreId);
-                queryParts.push(g2.label);
-            }
-        }
-
-        // Moods
-        if (userPreferences.moods && userPreferences.moods.length > 0) {
-            const moodList = Array.from(userPreferences.moods).map(id => {
-                const m = moods.find(item => item.id === id);
-                return m ? m.label : '';
-            }).filter(l => l);
-            if (moodList.length > 0) queryParts.push(moodList[0]);
-        }
-
-        let finalQuery = [...apiQueryParts, ...queryParts].join(' ');
-        if (!finalQuery.trim()) finalQuery = 'books';
-
-        console.log('🔍 Searching Taste Books:', finalQuery);
-        tasteBooks = await searchBooks(finalQuery);
-
-        // 3. Render
-        recsLoading.classList.add('hidden');
-
-        // Render Authors
-        if (authorBooks.length > 0) {
-            authorRecsContainer.classList.remove('hidden');
-            renderBooks(authorBooks.slice(0, 4), authorRecsGrid);
-        }
-
-        // Render Tastes
-        if (tasteBooks.length > 0) {
-            renderBooks(tasteBooks, recsGrid);
-        } else {
-            if (authorBooks.length === 0) {
-                recsEmpty.classList.remove('hidden');
-            }
-        }
-
-        // Unlock Achievement: First Recs
-        unlockAchievement('first_recs');
-
-    } catch (err) {
-        console.error('Error loading recs:', err);
-        recsLoading.classList.add('hidden');
-        recsEmpty.classList.remove('hidden');
     }
-}
 
+    // Reading Level
+    if (userPreferences.readingLevel) {
+        const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
+        if (level) queryParts.push(level.query);
+    }
+
+    // Genres
+    if (userPreferences.genres.length > 0) {
+        const firstGenreId = userPreferences.genres[0];
+        const g = genres.find(item => item.id === firstGenreId);
+        const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
+
+        apiQueryParts.push(`subject:"${genreLabel}"`);
+
+        if (userPreferences.genres.length > 1) {
+            // Add second genre as keyword
+            const secondGenreId = userPreferences.genres[1];
+            const g2 = genres.find(item => item.id === secondGenreId);
+            queryParts.push(g2.label);
+        }
+    }
+
+    let finalQuery = [...apiQueryParts, ...queryParts].join(' ');
+
+    if (!finalQuery.trim()) {
+        console.log('⚠️ Query is empty. Skipping API search to avoid generic results.');
+    } else {
+        console.log('🔍 Searching for recommendations with query:', finalQuery);
+
+        try {
+            // 1. Try Strict Search (Author + Genre + Level)
+            let strictBooks = await searchBooks(finalQuery);
+            console.log(`📚 Strict Query Found: ${strictBooks.length}`);
+
+            // 2. Try Author Only (if present)
+            let authorBooks = [];
+            if (userPreferences.authors) {
+                const authors = userPreferences.authors.split(',')[0].trim();
+                if (authors) {
+                    // Try strict author
+                    authorBooks = await searchBooks(`inauthor:"${authors}"`);
+                    // If strict fails, try fuzzy
+                    if (authorBooks.length === 0) {
+                        console.log('⚠️ Strict author search failed. Trying Fuzzy Author search...');
+                        authorBooks = await searchBooks(`${authors}`);
+                    }
+                }
+            }
+            console.log(`📚 Author Query Found: ${authorBooks.length}`);
+
+            // 3. Try Genre + Level (Discovery)
+            let genreBooks = [];
+            if (userPreferences.genres.length > 0) {
+                const genreId = userPreferences.genres[0];
+                const g = genres.find(item => item.id === genreId);
+                const genreLabel = g.id === 'scifi' ? 'science fiction' : g.label;
+
+                let genreQuery = `subject:"${genreLabel}"`;
+                if (userPreferences.readingLevel) {
+                    const level = readingLevels.find(l => l.id === userPreferences.readingLevel);
+                    if (level) genreQuery += ` ${level.query}`;
+                }
+                genreBooks = await searchBooks(genreQuery);
+            }
+            console.log(`📚 Genre Query Found: ${genreBooks.length}`);
+
+            // 4. Combine and Deduplicate
+            // Priority: Strict -> Author -> Genre
+            const allBooks = [...strictBooks, ...authorBooks, ...genreBooks];
+            const uniqueBooks = Array.from(new Map(allBooks.map(book => [book.id, book])).values());
+
+            console.log(`📚 Final Unique Count: ${uniqueBooks.length}`);
+
+            if (uniqueBooks.length > 0) {
+                renderRecs(uniqueBooks, recsGrid);
+                recsLoading.classList.add('hidden');
+                return; // Success!
+            }
+        } catch (error) {
+            console.error("Error loading recs:", error);
+            // Continue to Nuclear Fallback
+        }
+    }
+
+    // Fallback 3: Nuclear Option (Hardcoded Popular Books)
+    console.log('☢️ All searches failed. Deploying Nuclear Fallback...');
+    const nuclearBooks = [
+        {
+            id: 'nuclear1',
+            volumeInfo: {
+                title: "Harry Potter and the Sorcerer's Stone",
+                authors: ["J.K. Rowling"],
+                imageLinks: { thumbnail: "http://books.google.com/books/content?id=wrOQLV6xB-wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
+                description: "Harry Potter has no idea how famous he is. That's because he's being raised by his miserable aunt and uncle who are terrified Harry will learn that he's really a wizard, just as his parents were."
+            }
+        },
+        {
+            id: 'nuclear2',
+            volumeInfo: {
+                title: "Percy Jackson & The Olympians: The Lightning Thief",
+                authors: ["Rick Riordan"],
+                imageLinks: { thumbnail: "http://books.google.com/books/content?id=r0h1MtIu_VcC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
+                description: "Percy Jackson is a good kid, but he can't seem to focus on his schoolwork or control his temper. And lately, being away at boarding school is only getting worse."
+            }
+        },
+        {
+            id: 'nuclear3',
+            volumeInfo: {
+                title: "Wonder",
+                authors: ["R.J. Palacio"],
+                imageLinks: { thumbnail: "http://books.google.com/books/content?id=gjToDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
+                description: "August Pullman was born with a facial difference that, up until now, has prevented him from going to a mainstream school. Starting 5th grade at Beecher Prep, he wants nothing more than to be treated as an ordinary kid."
+            }
+        }
+    ];
+
+    recsGrid.innerHTML = `
+        <div class="info-banner">
+            <p>🕵️‍♀️ We couldn't find exact matches, but here are some all-time favorites!</p>
+        </div>
+    `;
+
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'book-grid';
+    recsGrid.appendChild(cardsContainer);
+
+    renderRecs(nuclearBooks, cardsContainer);
+    recsLoading.classList.add('hidden');
+}
 
 // Need to make sure renderBooks is available or we implement a simple version here
 function renderRecs(books, container) {
@@ -979,11 +939,7 @@ window.showBookDetails = async (bookId) => {
 window.addToWishlistFromModal = (title) => {
     journalData.wishlist.push({ id: Date.now(), title });
     saveJournal();
-
-    // Unlock Achievement: Wishlist Add
-    unlockAchievement('wishlist_add');
-
-    alert(`Added "${title}" to your wishlist! ❤️`);
+    alert(`Added "${title}" to your wishlist!`);
 };
 
 // ... (rest of existing functions)
@@ -1005,9 +961,9 @@ bookModal.addEventListener('click', (e) => {
 
 // Handlers
 
-function renderBooks(books, container = bookGrid) {
+function renderBooks(books) {
     if (!books || books.length === 0) {
-        container.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
+        bookGrid.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
         return;
     }
 
@@ -1017,7 +973,7 @@ function renderBooks(books, container = bookGrid) {
         { term: 'Award', label: '🏅 Award Winner' }
     ];
 
-    container.innerHTML = books.map(book => {
+    bookGrid.innerHTML = books.map(book => {
         const info = book.volumeInfo;
         // Get the best available image and remove the curl effect
         let thumbnail = info.imageLinks?.thumbnail?.replace('http:', 'https:').replace('&edge=curl', '');
@@ -1055,7 +1011,7 @@ function renderBooks(books, container = bookGrid) {
                         </div>
                         <p class="reddit-text">"${cleanSnippet}"</p>
                         <div class="reddit-actions">
-                            <a href="${redditLink}" target="_blank" class="reddit-link" onclick="unlockAchievement('social')">
+                            <a href="${redditLink}" target="_blank" class="reddit-link">
                                 <span class="reddit-icon">💬</span> Discuss on Reddit
                             </a>
                             <span class="reddit-upvotes">⬆️ ${(info.ratingsCount || 1) * 10}</span>
@@ -1072,14 +1028,8 @@ function renderBooks(books, container = bookGrid) {
     });
 }
 
-async function openBookDetails(bookOrId) {
-    let book;
-    if (typeof bookOrId === 'object') {
-        book = bookOrId;
-    } else {
-        book = currentBooks.find(b => b.id === bookOrId) || await getBookDetails(bookOrId);
-    }
-
+async function openBookDetails(id) {
+    const book = currentBooks.find(b => b.id === id) || await getBookDetails(id);
     if (!book) return;
 
     const info = book.volumeInfo;
@@ -1217,11 +1167,8 @@ function logBook(emoji) {
     localStorage.setItem('bookFinderBooksRead', currentRead);
 
     // Animation effect could go here
-    // alert(`Added a book! ${emoji}`);
+    alert(`Added a book! ${emoji}`);
     updateChallengeProgress();
-
-    // Unlock Achievement: First Read
-    unlockAchievement('first_read');
 }
 
 function updateChallengeProgress() {
@@ -1244,49 +1191,6 @@ function updateChallengeProgress() {
 
         if (progressText) progressText.textContent = `${percentage}%`;
         if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
-
-        // Update Jar
-        const jarBody = document.getElementById('challenge-jar');
-        if (jarBody) {
-            jarBody.innerHTML = ''; // Clear existing
-            // Logic for Jar Fullness:
-            // If goal <= 50, we show 1 token per book. Size is based on goal.
-            // If goal > 50, we scale down to 50 tokens max. Size is based on 50.
-            // This ensures that when read == goal, the jar looks full (50 tokens of size-for-50).
-
-            let visualGoal = goal;
-            let visualCount = read;
-
-            if (goal > 50) {
-                visualGoal = 50;
-                // Scale read count to 0-50 range
-                visualCount = Math.ceil((read / goal) * 50);
-            }
-
-            // Cap visual count at visual goal (so it doesn't overflow if read > goal)
-            visualCount = Math.min(visualCount, visualGoal);
-
-            // Area-based size formula using visualGoal
-            // size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(visualGoal)));
-            const size = Math.max(1.2, Math.min(4.5, 14 / Math.sqrt(visualGoal)));
-
-            for (let i = 0; i < visualCount; i++) {
-                const token = document.createElement('div');
-                token.classList.add('emoji-token');
-                token.textContent = '📚';
-                token.style.fontSize = `${size}rem`;
-
-                // Randomize rotation slightly for natural look
-                const rotation = Math.random() * 40 - 20;
-                token.style.transform = `rotate(${rotation}deg)`;
-                jarBody.appendChild(token);
-            }
-
-            // Unlock Achievement: Jar Full
-            if (read >= goal) {
-                unlockAchievement('jar_full');
-            }
-        }
 
         // Encouragement
         if (encouragementMsg) {
@@ -1360,9 +1264,6 @@ async function handleSurpriseMe() {
             // 5. Open details
             console.log('Surprise Me: Opening book', randomBook.volumeInfo.title);
             openBookDetails(randomBook);
-
-            // Unlock Achievement: Surprise Me
-            unlockAchievement('surprise_me');
 
             // Close sidebar if mobile
             if (window.innerWidth <= 768) {

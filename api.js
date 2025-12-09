@@ -118,23 +118,12 @@ export async function searchSimilar(category, author) {
     if (author) q += `+inauthor:${author}`;
 
     try {
-        // Fetch more results to have a better pool for sorting
-        const response = await fetch(`${API_URL}?q=${encodeURIComponent(q)}&maxResults=20&printType=books`);
+        const response = await fetch(`${API_URL}?q=${encodeURIComponent(q)}&maxResults=10&printType=books`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
-        let items = data.items || [];
-
-        // Sort by publishedDate (ascending) to prioritize first books in series
-        // This is a heuristic: older books are usually the first in a series
-        items.sort((a, b) => {
-            const dateA = a.volumeInfo.publishedDate || '9999';
-            const dateB = b.volumeInfo.publishedDate || '9999';
-            return dateA.localeCompare(dateB);
-        });
-
         // Tag these books as curated so they bypass strict filters
-        return items;
+        return data.items || [];
     } catch (error) {
         console.error('Error searching similar books:', error);
         return [];
