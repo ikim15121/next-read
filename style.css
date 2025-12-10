@@ -32,15 +32,17 @@
     --radius-md: 20px;
     --radius-lg: 30px;
     --radius-round: 50px;
-
-    --text-color: var(--text-main);
-    --text-light: var(--text-muted);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
 }
 
 body {
@@ -910,7 +912,6 @@ body {
     margin-bottom: 1rem;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
     line-height: 1.2;
 }

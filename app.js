@@ -21,14 +21,11 @@ const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 const navSearch = document.getElementById('nav-search');
 const navRecs = document.getElementById('nav-recs');
 const navJournal = document.getElementById('nav-journal');
-const navChallenge = document.getElementById('nav-challenge');
-const navSurprise = document.getElementById('nav-surprise');
 
 // Views
 const searchView = document.getElementById('search-view');
 const recsView = document.getElementById('recommendations-view');
 const journalView = document.getElementById('journal-view');
-const challengeView = document.getElementById('challenge-view');
 
 // Recs Elements
 const recsGrid = document.getElementById('recs-grid');
@@ -44,16 +41,6 @@ const wishlistList = document.getElementById('wishlist-list');
 const wishlistCount = document.getElementById('wishlist-count');
 const addSectionBtn = document.getElementById('add-section-btn');
 const journalSectionsContainer = document.getElementById('journal-sections');
-
-// Challenge Elements
-const challengeGoalInput = document.getElementById('challenge-goal');
-const saveGoalBtn = document.getElementById('save-goal-btn');
-const booksReadCount = document.getElementById('books-read-count');
-const resetChallengeBtn = document.getElementById('reset-challenge-btn');
-const progressBarFill = document.getElementById('progress-bar-fill');
-const progressText = document.getElementById('progress-text');
-const encouragementMsg = document.getElementById('encouragement-msg');
-const badgesGrid = document.getElementById('badges-grid');
 
 // Questionnaire Elements
 const questionnaireView = document.getElementById('questionnaire-view');
@@ -72,15 +59,7 @@ function setupJournalListeners() {
     // Navigation
     navSearch.addEventListener('click', () => switchView('search'));
     navRecs.addEventListener('click', () => switchView('recs'));
-    navSearch.addEventListener('click', () => switchView('search'));
-    navRecs.addEventListener('click', () => switchView('recs'));
     navJournal.addEventListener('click', () => switchView('journal'));
-    navChallenge.addEventListener('click', () => switchView('challenge'));
-    navSurprise.addEventListener('click', handleSurpriseMe);
-
-    // Challenge Actions
-    saveGoalBtn.addEventListener('click', updateGoal);
-    resetChallengeBtn.addEventListener('click', resetChallenge);
 
     // Recs Actions
     retakeQuizBtn.addEventListener('click', startQuestionnaire);
@@ -97,12 +76,9 @@ function setupJournalListeners() {
 }
 
 function startQuestionnaire() {
-    console.log('Starting Questionnaire');
-    const qView = document.getElementById('questionnaire-view');
-    if (!qView) console.error('Questionnaire view not found!');
-    qView.classList.remove('hidden');
-    console.log('Removed hidden class');
+    questionnaireView.classList.remove('hidden');
     showStep('step-welcome');
+    // Reset state if needed, or keep previous answers pre-selected
 }
 
 function switchView(viewName) {
@@ -112,14 +88,11 @@ function switchView(viewName) {
     searchView.classList.add('hidden');
     recsView.classList.add('hidden');
     journalView.classList.add('hidden');
-    challengeView.classList.add('hidden');
 
     // Deactivate navs
     navSearch.classList.remove('active');
     navRecs.classList.remove('active');
     navJournal.classList.remove('active');
-    navChallenge.classList.remove('active');
-    navSurprise.classList.remove('active');
 
     if (viewName === 'search') {
         searchView.classList.remove('hidden');
@@ -128,10 +101,6 @@ function switchView(viewName) {
         recsView.classList.remove('hidden');
         navRecs.classList.add('active');
         loadRecommendations();
-    } else if (viewName === 'challenge') {
-        challengeView.classList.remove('hidden');
-        navChallenge.classList.add('active');
-        updateChallengeUI();
     } else {
         journalView.classList.remove('hidden');
         navJournal.classList.add('active');
@@ -189,7 +158,7 @@ async function loadRecommendations() {
 
     try {
         const books = await searchBooks(finalQuery);
-        renderRecommendationBooks(books, recsGrid); // Reuse renderBooks logic? Need to expose it or duplicate
+        renderBooks(books, recsGrid); // Reuse renderBooks logic? Need to expose it or duplicate
     } catch (error) {
         console.error("Error loading recs:", error);
         recsGrid.innerHTML = '<p>Sorry, we couldn\'t load recommendations right now.</p>';
@@ -199,7 +168,7 @@ async function loadRecommendations() {
 }
 
 // Need to make sure renderBooks is available or we implement a simple version here
-function renderRecommendationBooks(books, container) {
+function renderBooks(books, container) {
     container.innerHTML = books.map(book => {
         const volumeInfo = book.volumeInfo;
         const image = volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192?text=No+Cover';
@@ -295,11 +264,6 @@ let userPreferences = {
     genres: [],
     moods: []
 };
-let challengeData = {
-    goal: 10,
-    read: 0,
-    badges: [] // 'first-book', 'bookworm', etc.
-};
 
 // Data
 const readingLevels = [
@@ -342,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderOptions();
     setupEventListeners();
     loadJournal();
-    loadChallenge();
     setupJournalListeners();
     loadPreferences(); // Load saved prefs on startup
 });
@@ -432,12 +395,12 @@ function toggleOption(btn) {
 
         if (set.has(value)) {
             set.delete(value);
-            btn.classList.remove('selected');
+            if (btn) btn.classList.remove('selected');
         } else {
             set.add(value);
-            btn.classList.add('selected');
+            if (btn) btn.classList.add('selected');
         }
-        nextBtn.disabled = set.size === 0;
+        if (nextBtn) nextBtn.disabled = set.size === 0;
     }
 }
 
@@ -552,128 +515,6 @@ window.deleteJournalSection = deleteSection;
 window.updateJournalSection = updateSectionContent;
 window.updateJournalSectionTitle = updateSectionTitle;
 
-// --- Challenge Logic ---
-function loadChallenge() {
-    const saved = localStorage.getItem('bookFinderChallenge');
-    if (saved) {
-        challengeData = JSON.parse(saved);
-        if (!challengeData.badges) challengeData.badges = []; // Migrate old data
-    }
-    updateChallengeUI();
-}
-
-function saveChallenge() {
-    localStorage.setItem('bookFinderChallenge', JSON.stringify(challengeData));
-    updateChallengeUI();
-}
-
-function updateGoal() {
-    const newGoal = parseInt(challengeGoalInput.value);
-    if (newGoal > 0) {
-        challengeData.goal = newGoal;
-        saveChallenge();
-        alert('Goal updated! Go get em!');
-    }
-}
-
-function resetChallenge() {
-    if (confirm("Start over? This will reset your counter to 0.")) {
-        challengeData.read = 0;
-        challengeData.badges = [];
-        saveChallenge();
-    }
-}
-
-function updateChallengeUI() {
-    // Stats
-    challengeGoalInput.value = challengeData.goal;
-    booksReadCount.textContent = challengeData.read;
-
-    // Progress Bar
-    const percent = Math.min(100, Math.round((challengeData.read / challengeData.goal) * 100));
-    progressBarFill.style.width = `${percent}%`;
-    progressText.textContent = `${percent}%`;
-
-    // Messages
-    if (percent === 0) encouragementMsg.textContent = "Let's get started! 🚀";
-    else if (percent < 50) encouragementMsg.textContent = "Great start! Keep going! 📖";
-    else if (percent < 100) encouragementMsg.textContent = "You're almost there! 🔥";
-    else encouragementMsg.textContent = "YOU DID IT! AMAZING! 🎉";
-
-    // Badges Check
-    checkBadges();
-    renderBadges();
-}
-
-function logBook(emoji) {
-    challengeData.read++;
-    saveChallenge();
-
-    // Fun animation effect could go here
-    const btn = event.target;
-    const originalText = btn.textContent;
-    btn.textContent = "+1";
-    setTimeout(() => btn.textContent = originalText, 500);
-}
-window.logBook = logBook;
-
-function checkBadges() {
-    const newBadges = [];
-
-    if (challengeData.read >= 1 && !challengeData.badges.includes('first')) {
-        newBadges.push('first');
-        challengeData.badges.push('first');
-    }
-    if (challengeData.read >= 5 && !challengeData.badges.includes('five')) {
-        newBadges.push('five');
-        challengeData.badges.push('five');
-    }
-    if (challengeData.read >= challengeData.goal && !challengeData.badges.includes('goal')) {
-        newBadges.push('goal');
-        challengeData.badges.push('goal');
-    }
-
-    if (newBadges.length > 0) {
-        saveChallenge(); // Save the new badges
-        // Maybe show a toast notification?
-    }
-}
-
-function renderBadges() {
-    if (challengeData.badges.length === 0) {
-        badgesGrid.innerHTML = '<div class="badge-placeholder">Read more to unlock trophies! 🏆</div>';
-        return;
-    }
-
-    const badgeMap = {
-        'first': { label: 'First Steps', icon: '🐣', desc: 'Read 1 Book' },
-        'five': { label: 'Bookworm', icon: '🐛', desc: 'Read 5 Books' },
-        'goal': { label: 'Goal Crusher', icon: '🥇', desc: 'Hit your goal!' }
-    };
-
-    badgesGrid.innerHTML = challengeData.badges.map(id => {
-        const b = badgeMap[id];
-        if (!b) return '';
-        return `
-            <div class="stat-box" style="min-width: 100px; padding: 1rem;">
-                <div style="font-size: 2rem;">${b.icon}</div>
-                <div style="font-weight: 700; font-size: 0.9rem;">${b.label}</div>
-                <div style="font-size: 0.8rem; color: #888;">${b.desc}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-function handleSurpriseMe() {
-    // Just simple for now: Pick a random genre and search
-    const randomGenres = ['fantasy', 'mystery', 'adventure', 'scifi', 'humor'];
-    const r = randomGenres[Math.floor(Math.random() * randomGenres.length)];
-
-    searchInput.value = `best ${r} books`;
-    handleSearch({ preventDefault: () => { } });
-    switchView('search');
-}
-
 function setupEventListeners() {
     // Welcome -> Reading
     startBtn.addEventListener('click', () => showStep('step-reading'));
@@ -707,15 +548,8 @@ function setupEventListeners() {
 }
 
 function showStep(stepId) {
-    console.log(`Showing step: ${stepId}`);
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    const step = document.getElementById(stepId);
-    if (step) {
-        step.classList.add('active');
-        console.log(`Step ${stepId} activated`);
-    } else {
-        console.error(`Step ${stepId} not found!`);
-    }
+    document.getElementById(stepId).classList.add('active');
 }
 
 async function finishQuestionnaire() {
@@ -781,22 +615,20 @@ async function finishQuestionnaire() {
     // Fallback: If query is too empty, just use "books"
     if (!finalQuery.trim()) {
         finalQuery = 'books';
-
-        // Log Journal Preference
-        console.log('Journal Preference:', journalPreference);
-
-        // Save Preferences for Auto Recommendations
-        savePreferences();
-
-        // Hide Questionnaire
-        questionnaireView.classList.add('hidden');
-
-        // Update Search Input
-        searchInput.value = finalQuery;
-
-        // Trigger Search
-        await handleSearch({ preventDefault: () => { } });
     }
+
+    // Log Journal Preference
+    console.log('Journal Preference:', journalPreference);
+
+    // Save Preferences for Auto Recommendations
+    savePreferences();
+
+    // Hide Questionnaire
+    questionnaireView.classList.add('hidden');
+
+    // Switch to Recs View
+    switchView('recs');
+
 }
 // Expose for testing/debugging
 // Assuming these functions/variables are defined elsewhere in the script
@@ -982,19 +814,21 @@ function showResultsView() {
 }
 
 function showLoading(isLoading) {
+    if (!loadingIndicator) return;
     if (isLoading) {
         loadingIndicator.classList.remove('hidden');
-        bookGrid.classList.add('hidden');
+        if (bookGrid) bookGrid.classList.add('hidden');
     } else {
         loadingIndicator.classList.add('hidden');
-        bookGrid.classList.remove('hidden');
+        if (bookGrid) bookGrid.classList.remove('hidden');
     }
 }
 
 
-function renderBooks(books) {
+function renderBooks(books, container = bookGrid) {
+    if (!container) return;
     if (!books || books.length === 0) {
-        bookGrid.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
+        container.innerHTML = '<p class="no-results">No popular books found. Try a different search.</p>';
         return;
     }
 
@@ -1004,7 +838,7 @@ function renderBooks(books) {
         { term: 'Award', label: '🏅 Award Winner' }
     ];
 
-    bookGrid.innerHTML = books.map(book => {
+    container.innerHTML = books.map(book => {
         const info = book.volumeInfo;
         // Get the best available image and remove the curl effect
         let thumbnail = info.imageLinks?.thumbnail?.replace('http:', 'https:').replace('&edge=curl', '');
