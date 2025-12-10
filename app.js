@@ -189,7 +189,7 @@ async function loadRecommendations() {
 
     try {
         const books = await searchBooks(finalQuery);
-        renderBooks(books, recsGrid); // Reuse renderBooks logic? Need to expose it or duplicate
+        renderRecommendationBooks(books, recsGrid); // Reuse renderBooks logic? Need to expose it or duplicate
     } catch (error) {
         console.error("Error loading recs:", error);
         recsGrid.innerHTML = '<p>Sorry, we couldn\'t load recommendations right now.</p>';
@@ -199,7 +199,7 @@ async function loadRecommendations() {
 }
 
 // Need to make sure renderBooks is available or we implement a simple version here
-function renderBooks(books, container) {
+function renderRecommendationBooks(books, container) {
     container.innerHTML = books.map(book => {
         const volumeInfo = book.volumeInfo;
         const image = volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192?text=No+Cover';
